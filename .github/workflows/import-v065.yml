@@ -1,0 +1,64 @@
+name: Community-V0.6.5-Startpaket importieren
+on:
+  push:
+    paths:
+      - 'ViEventLog_Community_PV_Warmwasser_V0.6.5_GitHub_Startpaket.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Archiv pruefen und Quelldateien auspacken
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import hashlib
+          import stat
+          filename = Path("ViEventLog_Community_PV_Warmwasser_V0.6.5_GitHub_Startpaket.zip")
+          if not filename.is_file():
+              raise SystemExit("ZIP fehlt; aus dem V0.6.5-Startpaket hochladen.")
+          expected = "b5db368dcd19a9ee1ffec2659a316fd587789453d3540e1ac8ba65a22123d933"
+          actual = hashlib.sha256(filename.read_bytes()).hexdigest()
+          if actual != expected:
+              raise SystemExit("Falsche ZIP-Pruefsumme; Import abgebrochen.")
+          prefix = "vieventlog-pv-warmwasser/"
+          with ZipFile(filename) as archive:
+              for member in archive.infolist():
+                  name = member.filename
+                  if not name.startswith(prefix):
+                      raise SystemExit("Unerwarteter Dateipfad im Archiv")
+                  relative = Path(name[len(prefix):])
+                  if not relative.parts or ".." in relative.parts or relative.is_absolute():
+                      raise SystemExit("Ungueltiger Dateipfad")
+                  if stat.S_ISLNK(member.external_attr >> 16):
+                      raise SystemExit("Keine Symlinks erlaubt")
+                  destination = Path(".") / relative
+                  if member.is_dir():
+                      destination.mkdir(parents=True, exist_ok=True)
+                      continue
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  destination.write_bytes(archive.read(member))
+          filename.unlink()
+          print("V0.6.5-Archiv erfolgreich importiert")
+          PY
+      - name: Dateien versionieren
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Keine neuen Dateien"
+          else
+            git commit -m "Importiere vollstaendigen Community-Quellstand V0.6.5"
+            git push
+          fi
