@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ViEventLog PV-Warmwasser | Einrichtung V0.6.5</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--fg:#152636;--muted:#526678;--line:#d8e1e8;--accent:#176b9b;--light:#e8f5fd;--warn:#fff6e6;--warnline:#efcf89;--error:#fff0ef;--errline:#e4a5a0;--shadow:0 10px 30px rgba(19,44,64,.07)}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px/1.47 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--fg)}main{max-width:1000px;margin:auto;padding:28px 18px 60px}.top{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:24px}.brand{display:flex;gap:14px;align-items:center}.logo{width:46px;height:46px;border-radius:13px;background:#155f91;color:white;display:grid;place-items:center;font-size:24px}h1{font-size:clamp(23px,3.5vw,34px);line-height:1.2;margin:0}h2{margin:0 0 5px;font-size:22px}h3{margin:23px 0 8px;font-size:16px}.subtitle{margin:3px 0 0;color:var(--muted);font-size:14px}.version{padding:6px 12px;background:#e7eef4;border-radius:20px;color:#344d61;font-size:12px;white-space:nowrap}.layout{display:grid;grid-template-columns:210px 1fr;gap:20px;align-items:start}.panel,.side{background:var(--card);border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow)}.side{padding:17px;position:sticky;top:16px}.side h3{margin:0 0 12px}.step-dot{display:flex;gap:10px;align-items:center;width:100%;border:0;background:none;padding:10px 7px;text-align:left;border-radius:10px;color:var(--muted);cursor:pointer}.step-dot.active{background:var(--light);color:var(--accent);font-weight:700}.step-dot.done{color:#286044}.step-dot span{width:26px;height:26px;border-radius:50%;background:#e5ecf1;display:grid;place-items:center;flex:none}.step-dot.active span{background:var(--accent);color:#fff}.step-dot small{font-size:13px}.aside-foot{border-top:1px solid var(--line);padding-top:13px;margin-top:17px;font-size:12px;color:var(--muted)}.panel{padding:26px}.header-row{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:13px;border-bottom:1px solid var(--line);padding-bottom:15px;margin-bottom:23px}.section-head p{color:var(--muted);margin:0 0 22px}.radio-card{display:flex;gap:12px;align-items:flex-start;padding:18px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;cursor:pointer;background:#fff}.radio-card.chosen{border:2px solid var(--accent);background:#f0f9ff;padding:17px}.radio-card input{margin:5px 0 0;accent-color:var(--accent);width:18px;height:18px;flex:none}.radio-content{display:flex;flex-direction:column;gap:5px}.radio-content small,.hint{font-size:13px;color:var(--muted)}.field{display:flex;flex-direction:column;gap:6px;margin:10px 0;min-width:0}.field-label{font-size:13px;font-weight:650}.field input,.select{width:100%;min-width:0;height:42px;background:white;border:1px solid #b8c9d7;border-radius:8px;padding:9px 11px;font:inherit;color:var(--fg)}.field input:focus,.select:focus,.code:focus{outline:2px solid #71b9dd;outline-offset:1px}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 20px}.note{font-size:13px;color:#315b73;background:#eef7fc;border:1px solid #b7d6e9;padding:13px 15px;border-radius:10px;margin:16px 0}.note.warn{background:var(--warn);border-color:var(--warnline);color:#715321}.note.error{background:var(--error);border-color:var(--errline);color:#7f2622}.note p{margin:8px 0 0}.switch-line{display:flex;gap:12px;padding:11px 0;align-items:flex-start;cursor:pointer}.switch-line input{margin-top:4px;accent-color:var(--accent);width:19px;height:19px;flex:none}.switch-line span{display:flex;flex-direction:column}.switch-line strong{font-size:14px}.settings-group{border:1px solid var(--line);padding:0 15px;border-radius:11px;margin:10px 0;background:#fff}.settings-group summary{cursor:pointer;padding:15px 2px;font-weight:700}.settings-group[open]{padding-bottom:12px}.export-tabs{display:flex;gap:9px;margin:16px 0}.export-tabs button{padding:10px 14px;border:1px solid var(--line);border-radius:9px;background:white;cursor:pointer}.export-tabs button.selected{background:var(--light);color:var(--accent);border-color:var(--accent);font-weight:bold}.code{background:#152434;color:#e5f7ff;border:0;border-radius:10px;padding:16px;width:100%;height:340px;resize:vertical;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}.buttons,.nav{display:flex;gap:10px;justify-content:flex-end;align-items:center}.buttons{margin-top:12px}.nav{border-top:1px solid var(--line);padding-top:22px;margin-top:25px}.btn{font:inherit;font-weight:650;border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid var(--line)}.btn.primary{background:var(--accent);color:white;border-color:var(--accent)}.btn.secondary{background:white;color:var(--fg)}.btn:disabled{opacity:.4;cursor:not-allowed}.foot{color:var(--muted);margin-top:23px;font-size:12px;line-height:1.6}.good{color:#216e43}.bad{color:#b35525}#message{min-height:19px;font-size:13px;color:#326f46;margin-top:10px}@media(max-width:750px){main{padding:16px 12px 40px}.layout{grid-template-columns:1fr}.side{position:static}.side h3,.aside-foot{display:none}#dots{display:flex;overflow:auto}.step-dot{min-width:45px;flex-direction:column;text-align:center;gap:3px;padding:6px 2px}.step-dot small{font-size:10px}.panel{padding:18px}.two{grid-template-columns:1fr}.top{align-items:flex-start}.version{margin-top:5px}.export-tabs{flex-wrap:wrap}}@media(prefers-color-scheme:dark){:root{--bg:#101920;--card:#17252f;--fg:#e7f0f6;--muted:#b4c5d1;--line:#38505d;--accent:#74b9df;--light:#1c4055;--warn:#40321d;--warnline:#735c33;--error:#402322;--errline:#80504e;--shadow:none}.radio-card,.settings-group,.field input,.select,.export-tabs button,.btn.secondary{background:#1d303b;color:var(--fg)}.radio-card.chosen{background:#164052}.version{background:#293b46;color:var(--muted)}.step-dot span{background:#2b414c}.step-dot.active span{background:#357ea6}.note{background:#153547;border-color:#39667d;color:#d2ecf9}.note.warn{background:#40321d;color:#ffe9bb}.note.error{background:#402322;color:#ffcfcc}.good{color:#87d3aa}}
+/* V0.2: forecast preview and legible short explanations */
+.json-input{height:165px;min-height:110px;resize:vertical}.forecast-outcome{background:var(--light);border:1px solid var(--line);padding:17px;border-radius:12px;margin:18px 0 10px}.forecast-outcome h3{font-size:20px;margin:5px 0}.forecast-outcome p{margin:6px 0}.forecast-kicker{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--accent)}.preview-table{border-collapse:collapse;width:100%;font-size:13px;margin-top:12px}.preview-table th,.preview-table td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}.preview-table th{color:var(--muted);font-weight:650}.forecast-hint{margin:9px 0}.switch-line .hint{line-height:1.45;max-width:650px}.field .hint{line-height:1.42}.settings-group .hint{display:block}@media(max-width:600px){.preview-table{font-size:12px}.preview-table th,.preview-table td{padding:9px 5px}}
+/* On phones show all seven steps as two tidy rows rather than clipped labels. */
+@media(max-width:750px){
+  #dots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;overflow:visible}
+  .step-dot{min-width:0;flex-direction:row;text-align:left;gap:5px;align-items:center;padding:6px 4px}
+  .step-dot span{width:23px;height:23px;font-size:11px}
+  .step-dot small{font-size:10px;line-height:1.25;overflow-wrap:anywhere}
+}
+
+
+/* V0.5.0: modellunabhängiger, optionaler Prüfauftrag, standardmäßig zugeklappt. */
+.ai-review{margin-top:22px}.ai-review .hint{line-height:1.55}.ai-review .ai-prompt{height:255px;max-width:100%;margin-top:10px}.ai-review .ai-privacy{margin:15px 2px 4px}
+@media(max-width:600px){.ai-review .ai-prompt{height:285px}}
+
+/* V0.5.0: lesende Wochenplan-Vorschau */
+.schedule-preview{border:1px solid var(--line);border-radius:12px;padding:15px;margin:18px 0;background:var(--card)}
+.schedule-preview h3{margin:4px 0 14px}.timeline-label{font-size:13px;color:var(--muted);margin:13px 0 5px}
+.schedule-bar{height:32px;background:#dce8ef;border-radius:7px;position:relative;overflow:hidden}
+.schedule-slot{height:100%;position:absolute;border-radius:6px;background:#176b9b;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;white-space:nowrap}
+.schedule-slot.original{background:#73899b}.schedule-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px}
+.schedule-stages{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.schedule-stage{background:var(--light);border-radius:8px;padding:9px 8px;font-size:12px;line-height:1.4}
+.schedule-stage strong{display:block;font-size:13px;margin-bottom:3px}
+@media(max-width:750px){.schedule-stages{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-color-scheme:dark){.schedule-bar{background:#28424f}.schedule-slot.original{background:#556e7e}}
+</style></head>
+<body><main><header class="top"><div class="brand"><div class="logo" aria-hidden="true">☀</div><div><h1>PV-Warmwasser für ViEventLog</h1><p class="subtitle">Einrichtungshilfe · Expr-Tagesplan mit Status · HTML offline</p></div></div><span class="version">Prototyp V0.6.5</span></header>
+<div class="layout"><aside class="side"><h3>Einrichtung</h3><div id="dots"></div><p class="aside-foot">Eigenständiger Community-Prototyp. Kein Schreibzugriff auf Live-Geräte.</p></aside>
+<section class="panel"><div class="header-row"><span id="step-title">Einrichtung</span><span id="step-num">1 / 7</span></div><div id="content"></div><div id="message" role="status"></div><nav class="nav"><span id="status"></span><span style="flex:1"></span><button class="btn secondary" type="button" id="back">Zurück</button><button class="btn primary" type="button" id="next">Weiter</button></nav></section></div>
+<p class="foot"><strong>Keine Fernsteuerung:</strong> Die HTML-Datei selbst ruft keine Wetter-, PV- oder Viessmann-API auf. Der exportierte Expr-Prognoseplaner liest Wetterdaten erst beim Ausführen in ViEventLog. Die neue Prognoseprüfung verarbeitet lokal Demo- oder eingefügte JSON-Daten. Der Expr-Tagesplan darf nur den internen ViEventLog-Skriptzustand speichern. Er enthält weiterhin keine Anlagenaktionen. Das Python-Testpaket kann die exportierten JSON-Einstellungen lesen, Zappi per Digest-GET messen, Open-Meteo abrufen und einen sicheren Wochenplan-Vorschlag ohne Schreibbefehl berechnen. Es wird nicht im Browser ausgeführt. API-Schlüssel gehören nicht in öffentliche Issues, Screenshots oder Konfigurationsdateien.</p>
+</main><script>
+/* ViEventLog Community-Warmwasser 0.2: Konfiguration + reine Lesediagnose.
+   Keine Geräteaktionen, keine Netzaufrufe durch diese HTML-Datei. */
+(function(root) {
+  'use strict';
+  const CONFIG_VERSION = '0.6.5';
+  const SOURCE_VERSION = '0.4.47';
+  const DEFAULTS = Object.freeze({
+    dry_run:true, automation_enabled:true, dhw_control_method:'schedule', morning_enabled:true, main_enabled:true, early_surplus_enabled:false,
+    morning_time:'06:00',morning_check_minutes:15,morning_below_c:39,morning_target_c:45,main_target_c:51,
+    pv_earliest:'10:00',pv_latest:'16:00',min_solar_w_m2:70,early_surplus_w:1800,early_surplus_minutes:10,
+    early_forecast_ratio:0.8,pv_check_delay_minutes:20,pv_check_max_delays:2,
+    heating_credit_enabled:false,heating_power_factor:1,poll_seconds:120,forecast_cache_minutes:60,
+    use_panel_orientation:true,panel_tilt_deg:30,panel_azimuth_deg:0,estimated_dhw_w:2000,house_baseline_w:300,
+    early_surplus_mode:'manual',auto_surplus_discount_w:200,
+    auto_surplus_min_w:200,auto_surplus_max_w:8000,auto_pv_dc_kwp:9.24,auto_pv_ac_kw:8,
+    auto_pv_performance:0.8
+  });
+  const GROUPS = {
+    basis:'Allgemein und Zeitfenster', morgen:'Morgenreserve und Tagesladung',
+    pv:'PV-Überschuss und Frühstart', wetter:'Wetterprognosen', bilanz:'PV-Bilanz und Heizungsanrechnung'
+  };
+  const HELP = {
+    "dry_run": "Schaltet die echte Anlagensteuerung später zunächst aus. Beim Test werden nur Entscheidungen protokolliert.",
+    "dhw_control_method": "Zeitprogramm: vorhandenes Wochenprogramm vorübergehend verschieben und später kontrolliert zurückstellen. Einmalladung: gezielte einmalige WW-Anforderung ohne Veränderung des Wochenprogramms; Solltemperatur, Unterstützung und tatsächliches Ladeende müssen trotzdem geprüft werden.",
+    "automation_enabled": "Hauptschalter für die automatische Warmwasserplanung. Bei AUS erfolgt keine automatische Anforderung.",
+    "morning_enabled": "Prüft morgens die Speichertemperatur. Ist sie zu niedrig, wird eine kleine Reserve bis zum Morgenziel vorbereitet – unabhängig von der späteren PV-Tagesladung.",
+    "main_enabled": "Erlaubt die tägliche, möglichst mit Solarstrom versorgte Warmwasseraufheizung bis zum Tagesziel.",
+    "morning_time": "Uhrzeit, zu der geprüft wird, ob morgens noch genügend warmes Wasser vorhanden ist.",
+    "morning_check_minutes": "Zeitspanne nach der Morgenzeit, in der die Reserveprüfung erfolgen darf.",
+    "morning_below_c": "Nur wenn der Speicher strikt kälter ist als dieser Wert, wird die Morgenreserve benötigt.",
+    "morning_target_c": "Temperatur, auf die eine erforderliche Morgenreserve aufheizen soll; niedriger als das Tagesziel.",
+    "main_target_c": "Zieltemperatur für die spätere PV-Tagesladung. Nicht mit der aktuellen Speichertemperatur verwechseln.",
+    "pv_earliest": "Frühester Beginn des vorgesehenen PV-Tagesfensters. Ein wetterbasierter Vorschlag darf nicht davor liegen.",
+    "pv_latest": "Spätester zulässiger Startzeitpunkt der PV-Tagesladung; auch Rückfalltermin bei gewähltem Ersatzbetrieb.",
+    "min_solar_w_m2": "Mindest-Strahlungsprognose für eine geeignete Open-Meteo-Stunde. W/m² sind keine Watt PV-Einspeisung.",
+    "early_surplus_enabled": "Nur mit echter Netzleistungsmessung: früher starten, wenn ausreichend Einspeisung über genügend Zeit nachgewiesen ist.",
+    "early_surplus_w": "Mindestens benötigte gemessene Einspeisung für einen Frühstart, beispielsweise 1.800 W.",
+    "early_surplus_minutes": "So lange muss die Netzeinspeisung zusammenhängend über der eingestellten Grenze liegen.",
+    "early_forecast_ratio": "Begrenzt die Frühstart-Entscheidung anhand der Prognose. Details müssen noch mit der temporären ViCare-Zeitplanlogik abgeglichen werden.",
+    "pv_check_delay_minutes": "Intervall, nach dem die bisherige Bridge eine PV-Startprüfung verschoben hat. Für die spätere Community-Zeitplansteuerung zu prüfen.",
+    "pv_check_max_delays": "Maximalzahl solcher Verschiebungen in der bisherigen Zeitplansteuerung. In der Community-Version noch nicht wirksam.",
+    "heating_credit_enabled": "Kann bei bestätigtem Raumheizbetrieb dessen elektrische Leistung bei der Frühstart-Überschussprüfung berücksichtigen.",
+    "heating_power_factor": "Korrigiert den aus ViEventLog gelesenen elektrischen Heizleistungswert, falls die Anlage systematisch abweicht.",
+    "poll_seconds": "Geplanter Abstand zwischen Mess- und Prüfzyklen. Die spätere Cron-Einstellung muss dazu passen.",
+    "forecast_cache_minutes": "Wie lange eine zuvor erfolgreich gelesene Prognose wiederverwendet wird, bevor ein neuer Abruf nötig ist.",
+    "use_panel_orientation": "Open-Meteo berücksichtigt Neigung und Richtung der Module. Das verbessert die Abschätzung gegenüber horizontaler Strahlung.",
+    "panel_tilt_deg": "Neigung der Solarmodule gegenüber der Horizontalen: 0° flach, 90° senkrecht.",
+    "panel_azimuth_deg": "Bei Open-Meteo: 0° Süd, −90° Ost und +90° West (nicht der übliche Kompasswinkel).",
+    "estimated_dhw_w": "Geschätzte elektrische Leistung der Wärmepumpe während der Warmwasserladung; für spätere Bilanzrechnungen.",
+    "house_baseline_w": "Angenommener Grundverbrauch des Hauses bei späterer PV-Erfolgsbewertung. Kein Ersatz für echte Netzleistungswerte.",
+    "early_surplus_mode": "Fest: exakte Watt-Schwelle für gemessene Netzeinspeisung. Wetterabhängig: geschätzte höchste PV-Leistung der nutzbaren Prognosestunden minus Abschlag; zusätzlich Min/Max begrenzt.",
+    "auto_surplus_discount_w": "Diesen Betrag von der erwarteten höchsten PV-Leistung abziehen, um die automatische Startschwelle zu bilden.",
+    "auto_surplus_min_w": "Die automatisch berechnete Mindestüberschussschwelle darf nicht unter diesen Wert fallen.",
+    "auto_surplus_max_w": "Die automatisch berechnete Mindestüberschussschwelle darf diesen Wert nicht überschreiten.",
+    "auto_pv_dc_kwp": "Installierte Nennleistung der PV-Module. Im Community-Konfigurator auf die eigene Anlage anpassen.",
+    "auto_pv_ac_kw": "Maximale AC-Leistung des Wechselrichters; begrenzt die rechnerische PV-Leistungsprognose.",
+    "auto_pv_performance": "Pauschaler Abschlag für reale PV-Verluste bei der Umrechnung von Einstrahlung in elektrische Leistung."
+};
+  const SCHEMA = [
+    ['dry_run','Testmodus (immer bei Erstinbetriebnahme)', 'bool',null,null,'basis','Steuert später den Schreibbetrieb. Der jetzige Generator erzeugt ausschließlich Lesediagnose.'],
+    ['automation_enabled','Automatik aktiviert','bool',null,null,'basis'],
+    ['dhw_control_method','Warmwasser-Auslösung','enum',['schedule','one_time'],null,'basis'],
+    ['morning_enabled','Morgenreserve aktiv','bool',null,null,'morgen'],
+    ['main_enabled','Tagesladung aktiv','bool',null,null,'morgen'],
+    ['morning_time','Morgenprüfung (volle Stunde)','time',null,null,'morgen'],
+    ['morning_check_minutes','Prüffenster nach Morgenzeit (min)','int',5,55,'morgen'],
+    ['morning_below_c','Morgenreserve unter Temperatur (°C)','number',30,50,'morgen'],
+    ['morning_target_c','Morgenzieltemperatur (°C)','number',35,60,'morgen'],
+    ['main_target_c','Tageszieltemperatur (°C)','number',40,60,'morgen'],
+    ['pv_earliest','PV-Beginn (volle Stunde)','time',null,null,'basis'],
+    ['pv_latest','PV-Ende (volle Stunde)','time',null,null,'basis'],
+    ['min_solar_w_m2','Open-Meteo Mindesteinstrahlung (W/m²)','number',0,1000,'wetter'],
+    ['early_surplus_enabled','Messwertbasierter Frühstart','bool',null,null,'pv'],
+    ['early_surplus_w','Manueller Mindestüberschuss (W)','int',200,12000,'pv'],
+    ['early_surplus_minutes','Bestätigungsdauer (min)','int',1,60,'pv'],
+    ['early_forecast_ratio','Frühstart-Prognoseverhältnis (0,5–1)','number',0.5,1,'pv'],
+    ['pv_check_delay_minutes','PV-Prüfung: Verschiebungsintervall (min)','int',5,120,'pv'],
+    ['pv_check_max_delays','PV-Prüfung: maximale Verschiebungen','int',0,12,'pv'],
+    ['heating_credit_enabled','Heizungsstrom-Anrechnung aktiv','bool',null,null,'bilanz'],
+    ['heating_power_factor','Korrekturfaktor Heizstrom','number',0.1,3,'bilanz'],
+    ['poll_seconds','Messintervall (Sekunden)','int',30,900,'basis'],
+    ['forecast_cache_minutes','Prognose-Cache (min)','int',15,180,'wetter'],
+    ['use_panel_orientation','Open-Meteo Modulorientierung verwenden','bool',null,null,'wetter'],
+    ['panel_tilt_deg','Modulneigung (Grad)','number',0,90,'wetter'],
+    ['panel_azimuth_deg','Open-Meteo Azimut (0° = Süd)','number',-180,180,'wetter','Nicht Kompass-Azimut: bei Open-Meteo ist 0° = Süd, -90° = Ost, +90° = West.'],
+    ['estimated_dhw_w','Angenommene elektrische WW-Leistung (W)','int',500,8000,'bilanz'],
+    ['house_baseline_w','Hausgrundlast für Erfolgsbilanz (W)','int',0,1500,'bilanz'],
+    ['early_surplus_mode','Überschussschwelle: fest / wetterabhängig','enum',['manual','auto'],null,'pv'],
+    ['auto_surplus_discount_w','Automatik: Abschlag (W)','int',0,3000,'pv'],
+    ['auto_surplus_min_w','Automatik: Untergrenze (W)','int',200,8000,'pv'],
+    ['auto_surplus_max_w','Automatik: Obergrenze (W)','int',200,12000,'pv'],
+    ['auto_pv_dc_kwp','PV-Generatorleistung (kWp)','number',0.5,40,'wetter'],
+    ['auto_pv_ac_kw','Wechselrichtergrenze (kW)','number',0.5,30,'wetter'],
+    ['auto_pv_performance','Open-Meteo Wirkungsfaktor (0,5–1)','number',0.5,1,'wetter']
+  ].map(([key,label,type,min,max,group,help])=>({key,label,type,min,max,group,help:HELP[key]||help||''}));
+  const SETTINGS_KEYS = Object.keys(DEFAULTS);
+  function initial() {return {community:{platform:'nas',mode:'forecast_only',pv_source:'none',pv_url:'',pv_path:'grid.power',pv_invert:false,
+    latitude:'52.5200',longitude:'13.4050',example_location:true,no_forecast_policy:'manual_latest',missing_grid_policy:'forecast_only',
+    homeassistant_entity:'sensor.grid_power',service_region:'Europe/Berlin',diagnostics_only:true},settings:{...DEFAULTS}};}
+  function validate(raw) {
+    const c=raw.community||{}, s=raw.settings||{}, errors=[],warnings=[];
+    for(const d of SCHEMA){const v=s[d.key];
+      if(d.type==='bool'){if(typeof v!=='boolean') errors.push(d.label+': true/false erforderlich');}
+      else if(d.type==='int'||d.type==='number'){if(typeof v!=='number'||!Number.isFinite(v)||v<d.min||v>d.max||(d.type==='int'&&!Number.isInteger(v)))errors.push(d.label+': Wert außerhalb '+d.min+'–'+d.max);}
+      else if(d.type==='time'){if(!/^\d\d:00$/.test(String(v))||Number(String(v).slice(0,2))>23)errors.push(d.label+': HH:00 erforderlich');}
+      else if(d.type==='enum'){if(!d.min.includes(v))errors.push(d.label+': ungültige Auswahl');}
+      else if(d.type==='string'&&(typeof v!=='string'||!v.trim()))errors.push(d.label+': Text erforderlich');
+    }
+    const hour=x=>Number(String(x).slice(0,2));
+    if(!(hour(s.morning_time)<hour(s.pv_earliest)&&hour(s.pv_earliest)<=hour(s.pv_latest)&&hour(s.pv_latest)<=22)) errors.push('Morgenzeit < PV-Beginn ≤ PV-Ende ≤ 22:00 erforderlich.');
+    if(!(s.morning_below_c<s.morning_target_c&&s.morning_target_c<s.main_target_c)) errors.push('Temperaturen müssen Morgen-Schwelle < Morgenziel < Tagesziel erfüllen.');
+    if(s.auto_surplus_min_w>s.auto_surplus_max_w)errors.push('Automatische Überschussschwelle: Untergrenze größer als Obergrenze.');
+    if(!['forecast_only','hybrid'].includes(c.mode))errors.push('Steuerungsart ungültig.');
+    if(!['schedule','one_time'].includes(s.dhw_control_method))errors.push('Warmwasser-Auslöseverfahren ungültig.');
+    if(!['nas','raspberry','windows','linux','other'].includes(c.platform))errors.push('Installationsplattform ungültig.');
+    if(!['manual_latest','hold'].includes(c.no_forecast_policy))errors.push('Fallback bei fehlender Wetterprognose ungültig.');
+    if(!['forecast_only','hold'].includes(c.missing_grid_policy))errors.push('Fallback bei fehlenden PV-Werten ungültig.');
+    if(c.mode==='hybrid'&&!['evcc','homeassistant','generic_json','zappi_adapter'].includes(c.pv_source))errors.push('PV-Datenquelle auswählen.');
+    {
+      const lat=Number(c.latitude),lon=Number(c.longitude);
+      if(String(c.latitude).trim()===''||String(c.longitude).trim()===''||!Number.isFinite(lat)||!Number.isFinite(lon)||lat< -90||lat>90||lon< -180||lon>180) errors.push('Für Open-Meteo sind gültige Breiten- und Längengrade nötig.');
+    }
+    if(c.mode==='hybrid'&&c.pv_source!=='none'&&c.pv_source!=='zappi_adapter'){
+      if(!/^https?:\/\/[^\s]+$/i.test(String(c.pv_url)))errors.push('PV-Datenquelle: vollständige HTTP(S)-URL erforderlich.');
+      else {
+        try {
+          const pvUri = new URL(String(c.pv_url));
+          const names = [...pvUri.searchParams.keys()].map(x=>x.toLowerCase());
+          if(pvUri.username || pvUri.password || names.some(x=>/^(token|api[_-]?key|auth|authorization|password|secret|access[_-]?token)$/.test(x)))
+            errors.push('Sicherheitsfehler: Zugangsdaten dürfen nicht in der PV-URL stehen.');
+        } catch (_) {errors.push('PV-Datenquelle: ungültige URL.');}
+      }
+      if(!String(c.pv_path).trim())errors.push('PV-Datenquelle: JSON-Pfad erforderlich.');
+    }
+    if(c.example_location || (Math.abs(Number(c.latitude)-52.52)<0.000001 && Math.abs(Number(c.longitude)-13.405)<0.000001))
+      warnings.push('STANDORTBEISPIEL BERLIN: 52.5200 / 13.4050 sind Platzhalter. Vor Verwendung die eigenen Koordinaten eintragen.');
+    if(c.mode==='hybrid' && s.early_surplus_enabled && s.early_surplus_mode==='auto'){
+      if(!s.use_panel_orientation)warnings.push('Wetterabhängige Überschussschwelle erfordert Modulneigung und Ausrichtung (Open-Meteo Global Tilted Irradiance).');
+      warnings.push('Die PV-Nennleistung und Wechselrichtergrenze sind Beispiele. Bitte eigene Anlage eintragen. Prognose ersetzt keinen echten Netzleistungswert.');
+    }
+    if(c.mode==='forecast_only'){
+      if(s.early_surplus_enabled)warnings.push('Frühstart mit gemessenem Überschuss ist ohne PV-Messwerte nicht möglich. Diese Einstellung bleibt in der JSON-Konfiguration erhalten, wirkt hier aber nicht.');
+      if(s.heating_credit_enabled)warnings.push('Die Heizungsstrom-Anrechnung erfordert geprüfte Ist-Messwerte und steht im Prognosemodus nicht zur Verfügung.');
+      warnings.push('Ohne Netzleistungsmessung ist keine verlässliche PV-Deckungsquote bestimmbar.');
+    }
+    if(c.mode==='hybrid'&&c.pv_source==='zappi_adapter')warnings.push('Zappi wird jetzt direkt über den lokalen, LESENDEN Python-Adapter abgefragt. Zugangsdaten ausschließlich als Umgebungsvariablen angeben. Ein einzelner Messwert bestätigt noch keine zehn Minuten Überschuss.');
+    if(s.dhw_control_method==='one_time')warnings.push('Einmalladung: heating.dhw.oneTimeCharge und tatsächliche Solltemperatur müssen am Gerät überprüft werden. Der Wochenplan bleibt unangetastet; ein eventuell geänderter Sollwert braucht eine eigene gesicherte Rückstellung. Keine Geräteaktionen im Prototyp.');
+    if(c.mode==='hybrid'&&c.pv_source==='homeassistant')warnings.push('Der Home-Assistant-Token wird absichtlich nicht im exportierten JSON gespeichert. Im Diagnoseskript steht ein Platzhalter.');
+    warnings.push('Der Expr-Tagesplan enthält keine Anlagenaktionen, schreibt aber bei regulärem Lauf seinen Tagesplan mit set() dauerhaft in den ViEventLog-Skriptzustand. Im Testlauf wird der Zustand nicht gespeichert. Keine produktive Warmwassersteuerung.');
+    return {errors,warnings};
+  }
+  function cfgJson(state) {return JSON.stringify({generator_version:CONFIG_VERSION,reference_version:SOURCE_VERSION,
+    community:{...state.community,pv_url:state.community.pv_url||''},settings:state.settings},null,2)+'\n';}
+  function q(x){return JSON.stringify(String(x));}
+  function diagnosticExpr(state){const c=state.community,s=state.settings;let out=[
+    '// ViEventLog Community-Warmwasser '+CONFIG_VERSION+' – NUR LESEDIAGNOSE',
+    '// Basis Zappi · ViEventLog V'+SOURCE_VERSION+'. KEINE Aktionsbefehle.',
+    '// ViEventLog-Skript-Zeitplan als Vorschlag: */5 * * * *',
+    '// Spätere Produktivsteuerung erst nach gerätebezogenem Test und Review.',
+    'let testmodus = true;',
+    'let ww = dhwTemp();',
+    'let soll = dhwTarget();',
+    'log("Gewähltes WW-Auslöseverfahren", '+q(s.dhw_control_method==='one_time'?'Einmalige Warmwasserbereitung – nur Lesediagnose':'ViCare-Zeitprogramm – nur Lesediagnose')+');',
+    'log("WW-Speicher-Ist", ww ?? "nicht verfügbar", "°C; Soll", soll ?? "nicht verfügbar", "°C");'
+  ];
+    {
+      let url='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(c.latitude)+'&longitude='+encodeURIComponent(c.longitude)+'&hourly='+ (s.use_panel_orientation?'global_tilted_irradiance':'shortwave_radiation')+'&timezone=Europe%2FBerlin&forecast_days=2';
+      if(s.use_panel_orientation)url+='&tilt='+encodeURIComponent(s.panel_tilt_deg)+'&azimuth='+encodeURIComponent(s.panel_azimuth_deg);
+      out.push('let meteo = httpGet('+q(url)+');',
+        'let stunden = jsonPath(meteo, '+q('hourly.time')+');',
+        'let strahlung = jsonPath(meteo, '+q('hourly.'+(s.use_panel_orientation?'global_tilted_irradiance':'shortwave_radiation'))+');',
+        'log("Open-Meteo", meteo == nil ? "nicht erreichbar" : "Antwort vorhanden", "Stundenwerte", stunden == nil ? "fehlen" : len(stunden), "Strahlungswerte", strahlung == nil ? "fehlen" : len(strahlung));');
+    }
+    if(c.mode==='hybrid'){
+      if(c.pv_source==='homeassistant'){
+        out.push('let pvHeader = {"Authorization": "Bearer HIER_TOKEN_NUR_LOKAL_EINTRAGEN"};',
+          'let gridRaw = httpGet('+q(c.pv_url)+', '+q(c.pv_path)+', pvHeader);');
+      } else if(c.pv_source==='zappi_adapter')out.push('let gridRaw = nil;', 'log("Zappi: kein Direktzugriff im Expr-Lesetest; myenergi Digest-GET nur im lokalen Python-Modul.");');
+      else out.push('let gridRaw = httpGet('+q(c.pv_url)+', '+q(c.pv_path)+');');
+      out.push('let grid = toNumber(gridRaw);',
+        (c.pv_invert?'let netzbezug = grid == nil ? nil : -grid;':'let netzbezug = grid;'),
+        'log("Netzleistung (positiv Bezug, negativ Einspeisung)", netzbezug ?? "nicht verfügbar", "W");');
+    }else out.push('log("Betriebsart Nur Prognose: kein Wechselrichter-/Netzwert nötig.");');
+    out.push('log("DIAGNOSE ENDE: keine Warmwasser-Aktion, kein Speicherzustand geändert.");','false');
+    return out.join('\n')+'\n';
+  }
+  root.CommunityWW = Object.freeze({CONFIG_VERSION,SOURCE_VERSION,DEFAULTS,SCHEMA,GROUPS,initial,validate,cfgJson,diagnosticExpr});
+  if(typeof module!=='undefined'&&module.exports)module.exports=root.CommunityWW;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+/* Community warm-water forecast planner V0.2: read-only, offline, no API/device actions.
+   Inputs mimic current bridge conventions. Solar generation and grid export are distinct. */
+(function(root){
+'use strict';
+const ZONE='Europe/Berlin';
+const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:ZONE,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+function parts(instant){const o={};for(const p of fmt.formatToParts(instant)){if(p.type!=='literal')o[p.type]=p.value;}return o;}
+function dayKey(instant){const p=parts(instant);return `${p.year}-${p.month}-${p.day}`;}
+function clock(instant){const p=parts(instant);return `${p.hour}:${p.minute}`;}
+function berlinToInstants(day,time){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!/^\d{2}:\d{2}$/.test(time))return [];
+  const raw=Date.parse(`${day}T${time}:00Z`);
+  if(!Number.isFinite(raw))return [];
+  const results=[];
+  for(let offset=-180;offset<=180;offset+=30){const t=raw-offset*60000;const d=new Date(t);if(dayKey(d)===day&&clock(d)===time)results.push(t);}
+  return [...new Set(results)].sort((a,b)=>a-b);
+}
+function validNumber(v,limit){return typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=limit;}
+function parseOpenMeteo(data, settings){
+  if(!data||typeof data!=='object'||!data.hourly||typeof data.hourly!=='object')throw Error('Open-Meteo: Feld hourly fehlt.');
+  if(data.timezone&&data.timezone!==ZONE)throw Error('Open-Meteo: Daten müssen die Zeitzone Europe/Berlin verwenden.');
+  const field=settings.use_panel_orientation?'global_tilted_irradiance':'shortwave_radiation';
+  const times=data.hourly.time, values=data.hourly[field];
+  if(!Array.isArray(times)||!Array.isArray(values)||!times.length||times.length!==values.length||times.length>192)throw Error('Open-Meteo: Zeit- und Strahlungswerte fehlen oder haben unterschiedliche Länge.');
+  const slots=[],seen=new Set(), warnings=[];let ambiguous=0,invalid=0;
+  for(let i=0;i<times.length;i++){
+    const stamp=times[i];if(typeof stamp!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/.test(stamp)){invalid++;continue;}
+    const date=stamp.slice(0,10),time=stamp.slice(11,16);const instants=berlinToInstants(date,time);
+    if(instants.length!==1){ambiguous++;continue;} // DST overlap/gap: don't invent an instant.
+    const val=values[i];if(!validNumber(val,1600)){invalid++;continue;}
+    const end=instants[0],start=end-3600000;
+    if(seen.has(start)){invalid++;continue;}seen.add(start);
+    slots.push({start,end,value:val});
+  }
+  if(ambiguous)warnings.push(`${ambiguous} mehrdeutige oder ungültige Ortszeiten (Zeitumstellung) übersprungen.`);
+  if(invalid)warnings.push(`${invalid} unvollständige oder unplausible Werte übersprungen.`);
+  if(!slots.length)throw Error('Open-Meteo: Keine eindeutig zuordenbaren Stundenwerte.');
+  return {slots:slots.sort((a,b)=>a.start-b.start),warnings,unit:'W/m²',source:'openmeteo',oriented:settings.use_panel_orientation};
+}
+function roundedLead(now){return Math.ceil((now+10*60000)/(10*60000))*(10*60000);}
+function localMinutes(instant){const p=parts(new Date(instant));return Number(p.hour)*60+Number(p.minute);}
+function eligibleStart(start,now,settings){
+  const day=dayKey(new Date(now));
+  if(dayKey(new Date(start))!==day)return false;
+  const x=localMinutes(start);
+  return x>=Number(settings.pv_earliest.slice(0,2))*60&&x<=Number(settings.pv_latest.slice(0,2))*60;
+}
+function compute(data,state,now=new Date()){
+  if(!(now instanceof Date)||!Number.isFinite(now.getTime()))throw Error('Ungültiger Vorschauzeitpunkt.');
+  const s=state.settings,source='openmeteo';
+  const parsed=parseOpenMeteo(data,s);
+  const candidates=[];const lead=roundedLead(now.getTime());
+  const minValue=s.min_solar_w_m2;
+    for(const slot of parsed.slots){
+      if(slot.end<=lead||dayKey(new Date(slot.start))!==dayKey(now))continue;
+      // A forecast point is an hourly MEAN for the preceding hour, never a 10-min reading.
+      const start=Math.max(slot.start,lead);
+      if(start>=slot.end||!eligibleStart(start,now.getTime(),s))continue;
+      if(slot.value<minValue||slot.value<=0)continue;
+      const est=s.use_panel_orientation?Math.min(s.auto_pv_ac_kw,slot.value/1000*s.auto_pv_dc_kwp*s.auto_pv_performance):null;
+      candidates.push({start,windowStart:slot.start,end:slot.end,value:slot.value,estimatedPowerKw:est,energyKwh:null,window:'Stundenwert'});
+    }
+  candidates.sort((a,b)=>b.value-a.value||a.start-b.start);
+  const winner=candidates[0]||null;
+  const fallback=s.main_enabled&&state.community.no_forecast_policy==='manual_latest'?{
+    time:s.pv_latest,reason:'Spätester Tageszeitpunkt als konfigurierter Rückfall (noch keine Geräteaktion)'
+  }:null;
+  const warnings=[...parsed.warnings];
+  if(!winner)warnings.push('Keine ausreichend gute, noch nutzbare Prognosestunde innerhalb des erlaubten Zeitfensters gefunden.');
+  if(!s.use_panel_orientation)warnings.push('Horizontale Strahlung ist keine belastbare Prognose der PV-Anlagenleistung. Für eine Schätzung der elektrischen Leistung Modulorientierung aktivieren.');
+  warnings.push('Dies ist nur eine lokale Planungsvorschau mit bereitgestellten Daten. Kein Abruf, keine Warmwasseraktion, keine Netz-Einspeisemessung.');
+  return {winner,candidates:candidates.slice(0,8),fallback,warnings,source,unit:parsed.unit,day:dayKey(now),usedSlots:parsed.slots.length,
+    summary:winner?`Beste Empfehlung: ${clock(new Date(winner.start))} Uhr (${winner.value.toFixed(0)+' W/m² als Stundenmittel'}).`:'Keine geeignete Prognose-Empfehlung.'};
+}
+function demoData(state,day){
+  const s=state.settings;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(day))throw Error('Ungültiges Demo-Datum.');
+    const field=s.use_panel_orientation?'global_tilted_irradiance':'shortwave_radiation';
+    const times=[], values=[];
+    for(let h=7;h<=19;h++){
+      // Hourly timestamp denotes the END of the previous hour, consistent with V0.4.47.
+      times.push(`${day}T${String(h).padStart(2,'0')}:00`);
+      values.push(Math.round(Math.max(0,Math.sin((h-7)/12*Math.PI)*780)));
+    }
+    return {timezone:ZONE,hourly:{time:times,[field]:values}};
+}
+root.CommunityWWPlanner=Object.freeze({dayKey,clock,berlinToInstants,parseOpenMeteo,compute,demoData});
+if(typeof module!=='undefined'&&module.exports)module.exports=root.CommunityWWPlanner;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+/* V0.6.4: expr day-plan generator. set() updates ONLY ViEventLog script state. */
+(function(root){
+'use strict';
+const TEMPLATE="// Community-PV-Warmwasser V0.4.3 – DAUERHAFTER TAGESPLAN, KEINE GERAETEAKTION\n// Beide Ausloeseverfahren: schedule (ViCare-Zeitprogramm) oder one_time (Einmalladung).\n// Diese Version speichert NUR einen Skriptstatus; sie schaltet die Anlage NICHT.\n// In ViEventLog-TESTLAEUFEN wird set() nicht dauerhaft gespeichert.\n// Bei regulaerem Lauf schreibt set() den Tagesplan in den Zustand DIESER Skript-ID.\n// Vor dem ersten regulaeren Lauf den Testlauf und die Einstellungen kontrollieren.\n// Keine setDhwTemperature(), startDhwOneTimeCharge() oder /api/schedule/set.\n\n// ===== EINSTELLUNGEN AUS DEM HTML-KONFIGURATOR =====\nlet WW_TESTMODUS = true; // Geraeteaktionen sind im Code grundsaetzlich nicht enthalten.\nlet WW_PLAN_SPEICHERN = true; // Nur lokaler ViEventLog-Skriptzustand, KEINE ViCare-Aktion.\nlet WW_AUSLOESEWEG = \"one_time\"; // \"one_time\" oder \"schedule\"\nlet WW_AUTOMATIK_AKTIV = true;\nlet WW_MORGEN_AKTIV = true;\nlet WW_TAGESLADUNG_AKTIV = true;\nlet WW_MORGEN_UHR = \"06:00\";\nlet WW_MORGEN_FENSTER_MIN = 15;\nlet WW_MORGEN_UNTER_C = 39;\nlet WW_MORGEN_ZIEL_C = 45;\nlet WW_TAGES_ZIEL_C = 51;\nlet PV_BEGINN = \"10:00\";\nlet PV_ENDE = \"16:00\";\nlet PV_MIN_WERT = 70;\nlet WW_FALLBACK = \"manual_latest\";\nlet PV_QUELLE = \"openmeteo\";\n\n// ===== ZEIT, ISTWERTE UND PLAN AUS VORHERIGEN LAEUFEN =====\nlet WW_JETZT = date(now().Unix(), \"\", \"Europe/Berlin\");\nlet WW_HEUTE = WW_JETZT.Format(\"2006-01-02\");\nlet WW_UNIX = now().Unix();\nlet WW_LAYOUT = \"2006-01-02T15:04\";\nlet WW_IST = dhwTemp();\nlet WW_SOLL = dhwTarget();\nlet WW_IST_OK = WW_IST != nil && (type(WW_IST) == \"int\" || type(WW_IST) == \"float\") && WW_IST >= 5 && WW_IST <= 80;\nlet PV_START_DATUM = date(WW_HEUTE + \"T\" + PV_BEGINN, WW_LAYOUT, \"Europe/Berlin\");\nlet PV_ENDE_DATUM = date(WW_HEUTE + \"T\" + PV_ENDE, WW_LAYOUT, \"Europe/Berlin\");\nlet PV_START_UNIX = PV_START_DATUM == nil ? -1 : PV_START_DATUM.Unix();\nlet PV_ENDE_UNIX = PV_ENDE_DATUM == nil ? -1 : PV_ENDE_DATUM.Unix();\nlet WW_MORGEN_DATUM = date(WW_HEUTE + \"T\" + WW_MORGEN_UHR, WW_LAYOUT, \"Europe/Berlin\");\nlet WW_MORGEN_UNIX = WW_MORGEN_DATUM == nil ? -1 : WW_MORGEN_DATUM.Unix();\nlet WW_EINSTELLUNGEN_OK = WW_AUSLOESEWEG in [\"schedule\", \"one_time\"] &&\n  PV_START_UNIX > 0 && PV_ENDE_UNIX > PV_START_UNIX &&\n  PV_MIN_WERT >= 0 && PV_MIN_WERT <= 1600 &&\n  WW_TAGES_ZIEL_C >= 30 && WW_TAGES_ZIEL_C <= 70 &&\n  WW_MORGEN_UNIX > 0 && WW_MORGEN_FENSTER_MIN >= 5 && WW_MORGEN_FENSTER_MIN <= 60 &&\n  WW_MORGEN_UNTER_C >= 5 && WW_MORGEN_UNTER_C <= 70 &&\n  WW_MORGEN_ZIEL_C >= 30 && WW_MORGEN_ZIEL_C <= 70 &&\n  WW_FALLBACK in [\"manual_latest\", \"hold\"];\n\n// Eine EINZIGE Status-Map: kein teilweises Ersetzen mehrerer einzelner Status-Keys.\n// Unbekannte / unvollstaendige Statusdaten blockieren sicherheitshalber eine Neuplanung.\nlet WW_PLAN = get(\"community_ww_plan_v043\", nil);\nlet WW_HAT_PLAN = WW_PLAN != nil;\nlet WW_PLAN_SCHEMA_OK = !WW_HAT_PLAN || (\n  WW_PLAN?.schema == 1 && type(WW_PLAN?.day) == \"string\" &&\n  WW_PLAN?.source in [\"fallback\", \"openmeteo\"] &&\n  WW_PLAN?.method in [\"schedule\", \"one_time\"] &&\n  (type(WW_PLAN?.startUnix) == \"int\" || type(WW_PLAN?.startUnix) == \"float\") &&\n  WW_PLAN?.startUnix > 0 &&\n  (type(WW_PLAN?.createdUnix) == \"int\" || type(WW_PLAN?.createdUnix) == \"float\") &&\n  WW_PLAN?.createdUnix > 0 &&\n  WW_PLAN?.mainStatus in [\"planned\", \"requested\", \"running\", \"pending\", \"unknown\", \"done\", \"completed\"] &&\n  WW_PLAN?.morningStatus in [\"none\", \"requested\", \"running\", \"pending\", \"unknown\", \"done\", \"completed\"]\n);\nlet WW_PLAN_HEUTE = WW_HAT_PLAN && WW_PLAN_SCHEMA_OK && WW_PLAN?.day == WW_HEUTE;\nlet WW_PLAN_ALT = WW_HAT_PLAN && WW_PLAN_SCHEMA_OK && WW_PLAN?.day != WW_HEUTE;\nlet WW_ALTER_AUFTRAG_UNKLAR = WW_PLAN_ALT && (\n  WW_PLAN?.mainStatus in [\"requested\", \"running\", \"pending\", \"unknown\"] ||\n  WW_PLAN?.morningStatus in [\"requested\", \"running\", \"pending\", \"unknown\"]\n);\n// Beim Wechsel von schedule auf one_time (oder Aenderung relevanter Einstellungen)\n// am GLEICHEN Tag den alten Tagesplan nicht stillschweigend ueberschreiben.\nlet WW_PLAN_KONFLIKT = WW_PLAN_HEUTE && (\n  WW_PLAN?.method != WW_AUSLOESEWEG ||\n  WW_PLAN?.pvBegin != PV_BEGINN || WW_PLAN?.pvEnd != PV_ENDE ||\n  WW_PLAN?.solarMin != PV_MIN_WERT || WW_PLAN?.fallback != WW_FALLBACK ||\n  WW_PLAN?.mainTarget != WW_TAGES_ZIEL_C ||\n  WW_PLAN?.morningEnabled != WW_MORGEN_AKTIV ||\n  WW_PLAN?.morningTime != WW_MORGEN_UHR ||\n  WW_PLAN?.morningBelow != WW_MORGEN_UNTER_C ||\n  WW_PLAN?.morningTarget != WW_MORGEN_ZIEL_C ||\n  WW_PLAN?.morningWindow != WW_MORGEN_FENSTER_MIN\n);\nlet WW_NEUPLANUNG_ERLAUBT = WW_EINSTELLUNGEN_OK && WW_AUTOMATIK_AKTIV &&\n  WW_TAGESLADUNG_AKTIV && WW_PLAN_SCHEMA_OK && !WW_PLAN_HEUTE &&\n  !WW_ALTER_AUFTRAG_UNKLAR && PV_ENDE_UNIX > WW_UNIX;\n\n// Mindestvorlauf NUR bei erstmaliger Planung. Nach set() bleibt der Start fest.\n// ViCare-Zeitprogramm: wenigstens 10 Minuten, immer auf 10-Minuten-Raster.\n// Einmalladung: naechste 10-Minuten-Grenze als Vorschlag (kein Vorlaufzwang).\nlet WW_VORLAUF_UNIX = WW_AUSLOESEWEG == \"schedule\" ? WW_UNIX + 600 : WW_UNIX;\nlet WW_ERSTE_PLANMINUTE = int(ceil(float(WW_VORLAUF_UNIX) / 600.0) * 600.0);\nlet PV_FRUEHEST = max(PV_START_UNIX, WW_ERSTE_PLANMINUTE);\n\n// Open-Meteo ausschliesslich bei NEUPLANUNG abrufen. Bereits gespeicherte\n// Tagesplaene bleiben auch bei neuem Wetter oder Netzproblemen unveraendert.\n// Berlin ist lediglich ein Beispielstandort aus dem Konfigurator.\nlet PV_ANTWORT = WW_NEUPLANUNG_ERLAUBT ? httpGet(\"https://api.open-meteo.com/v1/forecast?latitude=52.5200&longitude=13.4050&hourly=global_tilted_irradiance&timezone=Europe%2FBerlin&forecast_days=2&tilt=30&azimuth=0\") : nil;\nlet PV_ZEITEN = jsonPath(PV_ANTWORT, \"hourly.time\");\nlet PV_WERTE = jsonPath(PV_ANTWORT, \"hourly.global_tilted_irradiance\");\nlet PV_DATEN_OK = type(PV_ZEITEN) == \"array\" && type(PV_WERTE) == \"array\" &&\n  len(PV_ZEITEN) > 0 && len(PV_ZEITEN) <= 192 && len(PV_ZEITEN) == len(PV_WERTE) &&\n  jsonPath(PV_ANTWORT, \"timezone\") == \"Europe/Berlin\";\n\n// Open-Meteo-Stundenwert beschreibt die VORHERIGE Stunde.\nlet PV_KANDIDATEN = PV_DATEN_OK && PV_ENDE_UNIX >= PV_FRUEHEST ?\n  filter(map(0..(len(PV_ZEITEN) - 1), {\n    let i = #;\n    let wert = PV_WERTE[i];\n    let istZahl = type(wert) == \"int\" || type(wert) == \"float\";\n    let zeit = type(PV_ZEITEN[i]) == \"string\" ?\n      date(PV_ZEITEN[i], WW_LAYOUT, \"Europe/Berlin\") : nil;\n    let ende = zeit == nil ? -1 : zeit.Unix();\n    let start = max(ende - 3600, PV_FRUEHEST);\n    {startUnix: start, score: wert, gueltig: istZahl && wert >= 0 && wert <= 1600 &&\n      zeit != nil && start < ende && start < PV_ENDE_UNIX && wert >= PV_MIN_WERT && wert > 0}\n  }), .gueltig) : [];\nlet PV_SORTIERT = len(PV_KANDIDATEN) > 0 ? sortBy(PV_KANDIDATEN, .score) : [];\nlet PV_BESTWERT = len(PV_SORTIERT) > 0 ? PV_SORTIERT[-1].score : nil;\nlet PV_GLEICH = PV_BESTWERT == nil ? [] : filter(PV_KANDIDATEN, .score == PV_BESTWERT);\nlet PV_BEST = len(PV_GLEICH) > 0 ? sortBy(PV_GLEICH, .startUnix)[0] : nil;\nlet PV_ERSETZUNG = PV_BEST == nil && WW_FALLBACK == \"manual_latest\" &&\n  PV_ENDE_UNIX >= PV_FRUEHEST ? PV_ENDE_UNIX : -1;\nlet PV_VORSCHLAG_UNIX = PV_BEST == nil ? PV_ERSETZUNG : PV_BEST.startUnix;\nlet PV_VORSCHLAG_QUELLE = PV_BEST == nil ? \"fallback\" : \"openmeteo\";\nlet WW_NEUER_PLAN_GUELTIG = WW_NEUPLANUNG_ERLAUBT && PV_VORSCHLAG_UNIX > 0;\n\n// Plan-Record wird einmal pro Tag angelegt, danach nur noch GELESEN.\n// \"planned\" beschreibt eine Planungsabsicht, keine ausgefuehrte WW-Aktion.\n// In ViEventLog-TESTLAEUFEN gibt es laut Skript-Engine KEINE dauerhafte Speicherung.\n// In regulaeren Laeufen ist dies die EINZIGE set()-Stelle im Skript.\nif WW_NEUER_PLAN_GUELTIG && WW_PLAN_SPEICHERN {\n  set(\"community_ww_plan_v043\", {\n    schema: 1, day: WW_HEUTE, method: WW_AUSLOESEWEG,\n    startUnix: PV_VORSCHLAG_UNIX, source: PV_VORSCHLAG_QUELLE,\n    createdUnix: WW_UNIX,\n    mainStatus: \"planned\", morningStatus: \"none\",\n    pvBegin: PV_BEGINN, pvEnd: PV_ENDE, solarMin: PV_MIN_WERT,\n    fallback: WW_FALLBACK, mainTarget: WW_TAGES_ZIEL_C,\n    morningEnabled: WW_MORGEN_AKTIV, morningTime: WW_MORGEN_UHR,\n    morningWindow: WW_MORGEN_FENSTER_MIN,\n    morningBelow: WW_MORGEN_UNTER_C, morningTarget: WW_MORGEN_ZIEL_C\n  });\n  log(\"PLAN_NEU: Tagesplan per set() vorgemerkt; nur regulaere Laeufe speichern dauerhaft.\")\n} else { false };\n\n// In demselben Lauf bereits den geplanten Wert anzeigen. Bei einem Testlauf\n// ist der Wert nur simuliert; erst ein spaeterer Lauf mit get() bestaetigt Speicherung.\nlet WW_AKTIVER_START = WW_PLAN_HEUTE && !WW_PLAN_KONFLIKT ? WW_PLAN?.startUnix :\n  (WW_NEUER_PLAN_GUELTIG ? PV_VORSCHLAG_UNIX : -1);\nlet WW_AKTIVE_METHODE = WW_PLAN_HEUTE ? WW_PLAN?.method : WW_AUSLOESEWEG;\nlet WW_AKTIVER_STATUS = WW_PLAN_HEUTE ? WW_PLAN?.mainStatus :\n  (WW_NEUER_PLAN_GUELTIG ? \"planned_preview\" : \"none\");\nlet WW_TAG_BEDARF = WW_AUTOMATIK_AKTIV && WW_TAGESLADUNG_AKTIV &&\n  WW_IST_OK && WW_IST < WW_TAGES_ZIEL_C;\nlet WW_FENSTER_ERREICHT = WW_AKTIVER_START > 0 &&\n  WW_UNIX >= WW_AKTIVER_START && WW_UNIX <= WW_AKTIVER_START + 900;\nlet WW_TERMIN_VERPASST = WW_AKTIVER_START > 0 && WW_UNIX > WW_AKTIVER_START + 900;\nlet WW_ZEITPROGRAMM_NOCH_EDITIERBAR = WW_AKTIVER_START > 0 &&\n  WW_AKTIVER_START >= WW_UNIX + 600;\nlet WW_MORGENFENSTER = WW_MORGEN_UNIX > 0 && WW_UNIX >= WW_MORGEN_UNIX &&\n  WW_UNIX < WW_MORGEN_UNIX + WW_MORGEN_FENSTER_MIN * 60;\nlet WW_MORGENBEDARF = WW_AUTOMATIK_AKTIV && WW_MORGEN_AKTIV &&\n  WW_IST_OK && WW_IST < WW_MORGEN_UNTER_C && WW_MORGENFENSTER;\nlet WW_UNGEWISS = WW_PLAN_HEUTE &&\n  (WW_PLAN?.mainStatus in [\"requested\", \"running\", \"pending\", \"unknown\"] ||\n   WW_PLAN?.morningStatus in [\"requested\", \"running\", \"pending\", \"unknown\"]);\nlet WW_MORGEN_BEREITS = WW_PLAN_HEUTE && WW_PLAN?.morningStatus in [\"done\", \"completed\"];\nlet WW_MAIN_BEREITS = WW_PLAN_HEUTE && WW_PLAN?.mainStatus in [\"done\", \"completed\"];\nlet WW_MORGEN_DIAGNOSE = WW_MORGENBEDARF && !WW_UNGEWISS && !WW_MORGEN_BEREITS &&\n  WW_PLAN_SCHEMA_OK && !WW_PLAN_KONFLIKT && !WW_ALTER_AUFTRAG_UNKLAR;\nlet WW_EINMAL_DIAGNOSE = WW_AKTIVE_METHODE == \"one_time\" &&\n  WW_PLAN_HEUTE && !WW_PLAN_KONFLIKT && !WW_UNGEWISS && !WW_MAIN_BEREITS &&\n  WW_AKTIVER_STATUS == \"planned\" && WW_TAG_BEDARF && WW_FENSTER_ERREICHT;\nlet WW_ZEITPLAN_DIAGNOSE = WW_AKTIVE_METHODE == \"schedule\" &&\n  WW_PLAN_HEUTE && !WW_PLAN_KONFLIKT && !WW_UNGEWISS && !WW_MAIN_BEREITS &&\n  WW_AKTIVER_STATUS == \"planned\" && WW_TAG_BEDARF && WW_ZEITPROGRAMM_NOCH_EDITIERBAR;\n\nlog(\"TEST V0.4.3: Tagesplan+Status; nur Skriptzustand, KEINE Anlagenaktion.\");\nlog(\"Speichertemperatur\", WW_IST ?? \"unbekannt\", \"Sollwert\", WW_SOLL ?? \"unbekannt\");\nlog(\"WW-Verfahren\", WW_AUSLOESEWEG, \"Konfiguration OK\", WW_EINSTELLUNGEN_OK);\nlog(\"Statusdaten OK\", WW_PLAN_SCHEMA_OK, \"heutiger gespeicherter Plan\", WW_PLAN_HEUTE,\n    \"Konfigurationskonflikt\", WW_PLAN_KONFLIKT, \"alter Auftrag ungeklaert\", WW_ALTER_AUFTRAG_UNKLAR);\nlog(\"Open-Meteo nur bei Neuplanung: abgefragt\", WW_NEUPLANUNG_ERLAUBT,\n    \"Daten gueltig\", PV_DATEN_OK, \"Kandidaten\", len(PV_KANDIDATEN));\nif WW_AKTIVER_START > 0 {\n  log(\"PLAN:\", date(WW_AKTIVER_START, \"\", \"Europe/Berlin\").Format(\"2006-01-02 15:04\"),\n      \"Methode\", WW_AKTIVE_METHODE, \"Status\", WW_AKTIVER_STATUS)\n} else {\n  log(\"KEIN TAGESPLAN: Wetter/Zeitraum/Einstellungen oder Status pruefen\")\n};\nlog(\"DIAGNOSE: Tagesbedarf\", WW_TAG_BEDARF,\n    \"Einmalladung Zeitfenster erreicht\", WW_EINMAL_DIAGNOSE,\n    \"Zeitprogramm neu editierbar\", WW_ZEITPLAN_DIAGNOSE,\n    \"Morgenreserve moeglich\", WW_MORGEN_DIAGNOSE,\n    \"Termin verpasst\", WW_TERMIN_VERPASST);\nlog(\"STATUS: planned bedeutet nur berechnet, NICHT in ViCare eingestellt/gestartet.\");\nlog(\"KEINE GERAETEAKTION: Kein Einmalstart, keine Zeitprogramm-Aenderung, keine Temperatur-Aenderung.\");\nfalse\n";
+const q=x=>JSON.stringify(String(x));
+function make(state){
+  const {community:c,settings:s}=state;
+  const checked=root.CommunityWW.validate(state);
+  if(checked.errors.length)throw Error('Konfiguration ungültig: '+checked.errors.join('; '));
+  const field=s.use_panel_orientation?'global_tilted_irradiance':'shortwave_radiation';
+  const srcUrl='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(c.latitude)+'&longitude='+encodeURIComponent(c.longitude)+'&hourly='+field+'&timezone=Europe%2FBerlin&forecast_days=2'+(s.use_panel_orientation?'&tilt='+encodeURIComponent(s.panel_tilt_deg)+'&azimuth='+encodeURIComponent(s.panel_azimuth_deg):'');
+  const lines=TEMPLATE.split('\n');
+  function put(name,value){
+    const prefix='let '+name+' = ';
+    const i=lines.findIndex(x=>x.startsWith(prefix));
+    if(i<0)throw Error('Fehlendes Vorlagenfeld: '+name);
+    lines[i]=prefix+value+';';
+  }
+  put('WW_TESTMODUS',String(true));
+  put('WW_AUSLOESEWEG',q(s.dhw_control_method));
+  put('WW_AUTOMATIK_AKTIV',String(s.automation_enabled));
+  put('WW_MORGEN_AKTIV',String(s.morning_enabled));
+  put('WW_TAGESLADUNG_AKTIV',String(s.main_enabled));
+  put('WW_MORGEN_UHR',q(s.morning_time));
+  put('WW_MORGEN_FENSTER_MIN',String(s.morning_check_minutes));
+  put('WW_MORGEN_UNTER_C',String(s.morning_below_c));
+  put('WW_MORGEN_ZIEL_C',String(s.morning_target_c));
+  put('WW_TAGES_ZIEL_C',String(s.main_target_c));
+  put('PV_BEGINN',q(s.pv_earliest));
+  put('PV_ENDE',q(s.pv_latest));
+  put('PV_MIN_WERT',String(s.min_solar_w_m2));
+  put('WW_FALLBACK',q(c.no_forecast_policy));
+  put('PV_ANTWORT','WW_NEUPLANUNG_ERLAUBT ? httpGet('+q(srcUrl)+') : nil');
+  put('PV_WERTE','jsonPath(PV_ANTWORT, '+q('hourly.'+field)+')');
+  // Hybrid source preview is diagnostic only, no surplus confirmation.
+  if(c.mode==='hybrid'){
+    const i=lines.findIndex(x=>x.startsWith('log("STATUS: planned'));
+    if(i<0)throw Error('Log-Einfuegepunkt fehlt');
+    const additional=[];
+    if(c.pv_source==='zappi_adapter'){
+      additional.push('log("Zappi: kein Direktzugriff in Expr; myenergi Digest-GET ist im Python-Modul.");');
+    }else{
+      if(c.pv_source==='homeassistant')additional.push('let PV_HEADERS = {"Authorization": "Bearer HIER_NUR_LOKAL_EINTRAGEN"};');
+      additional.push('let PV_NETZ_ROH = httpGet('+q(c.pv_url)+', '+q(c.pv_path)+(c.pv_source==='homeassistant'?', PV_HEADERS':'')+');');
+      additional.push('let PV_NETZ_ZAHL = toNumber(PV_NETZ_ROH);');
+      additional.push('let PV_NETZ = PV_NETZ_ZAHL == nil ? nil : '+(c.pv_invert?'-PV_NETZ_ZAHL':'PV_NETZ_ZAHL')+';');
+      additional.push('log("Netz +Bezug/-Einspeisung:", PV_NETZ ?? "unbekannt", "nur Diagnose; keine Frühstartfreigabe");');
+    }
+    lines.splice(i,0,...additional);
+  }
+  return lines.join('\n');
+}
+root.CommunityWWExpr=Object.freeze({make});
+if(typeof module!=='undefined'&&module.exports)module.exports=root.CommunityWWExpr;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+/* V0.6: pure PV surplus threshold calculation; requires REAL grid measurements for an early start. */
+(function(root){
+'use strict';
+function calculate(state,forecast){
+  const s=state.settings,c=state.community;
+  if(c.mode!=='hybrid'||!s.early_surplus_enabled)return {mode:'none',watts:null,reason:'Frühstart mit Messwerten derzeit deaktiviert.'};
+  if(s.early_surplus_mode==='manual')return {mode:'manual',watts:s.early_surplus_w,reason:'Fest vorgegebene Netzeinspeisung (nicht PV-Erzeugung).'};
+  if(!s.use_panel_orientation)return {mode:'auto',watts:null,reason:'Bitte Modulneigung und Ausrichtung aktivieren.'};
+  const candidates=forecast&&Array.isArray(forecast.candidates)?forecast.candidates:[];
+  const power=candidates.map(x=>x.estimatedPowerKw).filter(x=>typeof x==='number'&&Number.isFinite(x));
+  if(!power.length)return {mode:'auto',watts:null,reason:'Keine belastbare PV-Leistungsprognose im verbleibenden Zeitfenster.'};
+  const peak=Math.max(...power),watts=Math.max(s.auto_surplus_min_w,Math.min(s.auto_surplus_max_w,Math.round(peak*1000-s.auto_surplus_discount_w)));
+  return {mode:'auto',watts,peakKw:peak,reason:'Geschätzte PV-Spitzenleistung minus Abschlag, begrenzt auf Min/Max. Keine gemessene Einspeisung.'};
+}
+root.CommunityWWThreshold=Object.freeze({calculate});
+if(typeof module!=='undefined'&&module.exports)module.exports=root.CommunityWWThreshold;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+/* V0.4: pure, read-only decision simulator. No cloud calls or device writes.
+   'candidate' is a PROPOSAL, never a command or proof of charging. */
+(function(root){
+'use strict';
+const ZONE='Europe/Berlin';
+const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:ZONE,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+function localParts(now){const out={};for(const p of fmt.formatToParts(now))if(p.type!=='literal')out[p.type]=p.value;return out;}
+function dayKey(now){const p=localParts(now);return `${p.year}-${p.month}-${p.day}`;}
+function minute(now){const p=localParts(now);return +p.hour*60+(+p.minute);}
+const finished=new Set(['done','completed']);
+const uncertain=new Set(['requested','running','unknown','pending']);
+const legal=new Set(['none','done','completed','requested','running','unknown','pending']);
+function block(code,reason){return {decision:'blocked',code,reason,targetC:null,day:null};}
+function no(code,reason,day){return {decision:'none',code,reason,targetC:null,day};}
+function candidate(code,reason,targetC,day){return {decision:'candidate',code,reason,targetC,day};}
+function decide({configuration,now,temperature,chargeState,chargeObservedAt,record,forecastTime}){
+  if(!(now instanceof Date)||!Number.isFinite(now.getTime()))throw Error('Ungültiger Simulationszeitpunkt');
+  const valid=root.CommunityWW.validate(configuration);
+  if(valid.errors.length)throw Error('Konfiguration ungültig: '+valid.errors.join('; '));
+  const s=configuration.settings,c=configuration.community,day=dayKey(now);
+  if(!s.automation_enabled)return no('OFF','Automatik ausgeschaltet',day);
+  // Real control must supply a independently verified fresh charging state.
+  if(!['idle','active','unknown'].includes(chargeState))return block('CHARGE_UNKNOWN','Ladezustand fehlt oder ist unklar');
+  if(!Number.isFinite(chargeObservedAt)||chargeObservedAt>now.getTime()+30000||now.getTime()-chargeObservedAt>10*60000)return block('CHARGE_STALE','Ladezustand nicht frisch bestätigt');
+  if(chargeState==='unknown')return block('CHARGE_UNKNOWN','Ob Warmwasser gerade lädt, ist unbekannt');
+  if(chargeState==='active')return no('ALREADY_CHARGING','Warmwasserbereitung läuft bereits',day);
+  if(typeof temperature!=='number'||!Number.isFinite(temperature)||temperature<0||temperature>90)return block('TEMP_UNKNOWN','Speichertemperatur fehlt oder ist unplausibel');
+  const old=record&&typeof record==='object'?record:{};
+  const morning=old.morning??'none',main=old.main??'none';
+  if(!legal.has(morning)||!legal.has(main))return block('STATE_INVALID','Unbekannter Status in gespeicherten Tagesdaten');
+  if((uncertain.has(morning)||uncertain.has(main)))return block('PENDING','Frühere Anforderung ist noch nicht physisch geklärt');
+  if(old.day&&old.day>day)return block('FUTURE_STATE','Tageszustand stammt aus der Zukunft');
+  const sameDay=old.day===day;
+  const morningDone=sameDay&&finished.has(morning),mainDone=sameDay&&finished.has(main);
+  const clock=minute(now);
+  const morningFrom=Number(s.morning_time.slice(0,2))*60;
+  if(s.morning_enabled&&clock>=morningFrom&&clock<morningFrom+s.morning_check_minutes&&
+      !morningDone&&temperature<s.morning_below_c)
+    return candidate('MORNING','Morgenreserve wäre wegen niedriger Temperatur nötig',s.morning_target_c,day);
+  const pvFrom=Number(s.pv_earliest.slice(0,2))*60, pvTo=Number(s.pv_latest.slice(0,2))*60;
+  if(!s.main_enabled)return no('MAIN_DISABLED','PV-Tagesladung ausgeschaltet',day);
+  if(mainDone)return no('MAIN_DONE','PV-Tagesladung bereits als abgeschlossen gespeichert',day);
+  if(temperature>=s.main_target_c)return no('WARM_ENOUGH','Speicher bereits mindestens auf Tagesziel; Abschluss wird dadurch nicht behauptet',day);
+  if(clock<pvFrom||clock>pvTo+15)return no('OUTSIDE_PV','Außerhalb des zulässigen PV-Zeitfensters',day);
+  const proposed=forecastTime instanceof Date?forecastTime:null;
+  if(proposed&&Number.isFinite(proposed.getTime())&&dayKey(proposed)===day&&minute(proposed)>=pvFrom&&minute(proposed)<=pvTo){
+    const delta=now.getTime()-proposed.getTime();
+    if(delta>=0&&delta<=15*60000)return candidate('PV_DUE','Prognose-Startzeit erreicht',s.main_target_c,day);
+    if(delta<0)return no('PV_WAIT','Beste Prognosezeit noch nicht erreicht',day);
+    return no('PV_MISSED','Prognose-Startzeit verpasst: kein beliebiger verspäteter Start',day);
+  }
+  if(c.no_forecast_policy==='manual_latest'&&clock>=pvTo&&clock<=pvTo+15)
+    return candidate('FALLBACK_DUE','Spätester Rückfallzeitpunkt erreicht, unabhängig von PV',s.main_target_c,day);
+  return no('NO_FORECAST','Keine gültige fällige Prognose bzw. noch vor Rückfall',day);
+}
+root.CommunityWWDecision=Object.freeze({decide,dayKey,minute});
+if(typeof module!=='undefined'&&module.exports)module.exports=root.CommunityWWDecision;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+(function(){
+'use strict';
+const core=globalThis.CommunityWW;
+let state=core.initial(), step=0, output='planner';
+let forecastInput='', isDemo=true, simHour='10:00', lastForecastSuggestion=null, lastForecastIsDemo=true;
+const labels=['Steuerungsart','Datenquellen','Warmwasser','Weitere Einstellungen','Prognose prüfen','Sicherheit testen','Auslöseverfahren','Export & Tests'];
+const $=id=>document.getElementById(id);
+const el=(tag,attrs={},children=[])=>{const node=document.createElement(tag); for(const [key,value]of Object.entries(attrs)){if(key==='class')node.className=value;else if(key==='text')node.textContent=value;else if(key==='html')node.innerHTML=value;else node.setAttribute(key,value);}for(const ch of children)node.append(ch);return node;};
+const val=(id)=>$(id)?.value;
+function setParam(key,value){state.settings[key]=value;renderStatus();}
+function radio(name,value,title,desc,selected,callback){const label=el('label',{class:'radio-card '+(selected?'chosen':'')}); const inp=el('input',{type:'radio',name,value});inp.checked=selected; inp.addEventListener('change',()=>{callback(value);render();});label.append(inp,el('span',{class:'radio-content'},[el('strong',{text:title}),el('small',{text:desc})]));return label;}
+function txt(label,value,change,opts={}) {const wrap=el('label',{class:'field'}),lab=el('span',{text:label,class:'field-label'});let inp=el('input',{type:opts.type||'text',placeholder:opts.placeholder||'',value:String(value??'')});if(opts.step)inp.setAttribute('step',opts.step);if(opts.min!==undefined)inp.setAttribute('min',opts.min);if(opts.max!==undefined)inp.setAttribute('max',opts.max); inp.addEventListener('input',()=>{change(inp.type==='number'?(inp.value===''?NaN:Number(inp.value)):inp.value);renderStatus();});wrap.append(lab,inp);if(opts.help)wrap.append(el('small',{text:opts.help,class:'hint'}));return wrap;}
+function switcher(label,value,change,help=''){const line=el('label',{class:'switch-line'});const inp=el('input',{type:'checkbox'});inp.checked=value;inp.addEventListener('change',()=>{change(inp.checked);renderStatus();});const content=el('span',{},[el('strong',{text:label})]);if(help)content.append(el('small',{class:'hint',text:help}));line.append(inp,content);return line;}
+function heading(title,description){return el('div',{class:'section-head'},[el('h2',{text:title}),el('p',{text:description})]);}
+function info(txt,type='info'){return el('div',{class:'note '+type,text:txt});}
+// Optionale Zweitkontrolle per ViEventLog-KI. Kein Zugriff auf eine KI aus der HTML-Datei.
+// Der Auftrag enthält nur Quellenarten und Betriebsart, keine Zugangsdaten oder Gerätekennungen.
+function makeAiAuditPrompt(configuration){
+  const s=configuration.settings, c=configuration.community;
+  const mode=c.mode==='forecast_only'?'Nur Wetter-/PV-Prognose (ohne Netzleistungsmessung)':'PV-Prognose plus externe Netzleistungsmessung';
+  const meteo='Open-Meteo (HTTP-Abfrage im Expr-Skript)';
+  const pv=c.mode==='forecast_only'?'keine':c.pv_source==='homeassistant'?'Home Assistant':c.pv_source==='zappi_adapter'?'Zappi-Datenadapter':c.pv_source==='generic_json'?'JSON-API':'evcc';
+  return [
+    'Bitte kontrolliere das gerade im ViEventLog-Skripteditor geöffnete Community-PV-Warmwasser-Skript für das dort ausgewählte Gerät.',
+    '',
+    'Eingerichtete Variante (nur zur Orientierung):',
+    '- Steuerungsart: '+mode,
+    '- Prognosequelle: '+meteo,
+    '- Netzleistungsquelle: '+pv,
+    '- Tagesziel: '+s.main_target_c+' °C; Morgenreserve: '+(s.morning_enabled?'aktiv':'aus'),
+    '- WW-Auslöseverfahren: '+(s.dhw_control_method==='one_time'?'Einmalige Warmwasserbereitung':'ViCare-Zeitprogramm'),
+    '',
+    '1. Lies zuerst get_script_docs. Ermittle das ausgewählte Gerät und lies mit get_live_features die relevanten heating.dhw-Features und ihren aktuellen Status, soweit die Werkzeuge verfügbar sind.',
+    '2. Prüfe je nach Auswahl: Zeitprogramm (heating.dhw.schedule, Schreibbarkeit, Backup und Wiederherstellung) oder Einmalladung (heating.dhw.oneTimeCharge, Aktivierbarkeit, Solltemperatur und Rückmeldung). Ein vorhandenes Feature allein beweist keinen erfolgreichen späteren Schaltvorgang.',
+    '3. Kontrolliere Expr-Syntax, Zeit- und Datumslogik, Messwertalter, nil-Behandlung, Prognoseausfälle, API-Erreichbarkeit, Zustände nach Neustart, Morgenreserve und Schutz vor Doppelstarts.',
+    '4. Nutze test_script ausschließlich für einen Trockenlauf am ausgewählten Gerät. Gib dabei die tatsächlich beobachteten Logs, Fehler und gegebenenfalls nur angekündigten Aktionen an.',
+    '5. Trenne die Ergebnisse deutlich: (a) Syntax/Testlauf bestätigt, (b) Geräteeigenschaften laut Live-Daten plausibel, (c) nicht nachgewiesen oder nicht verfügbar.',
+    '',
+    'WICHTIG: Keine Einstellungen ändern, keine Skripte speichern, keine Aktionen ausführen, keine Warmwasserladung starten. Niemals save_script, set_*- oder start_*-Werkzeuge aufrufen. Keine fehlenden Daten erfinden.',
+    'Der derzeitige Community-Prototyp ist bewusst ein Lesetest ohne aktive Schaltbefehle. Prüfe mögliche spätere Aktionen nur theoretisch. Wenn deine Werkzeuge nicht reichen, sage klar, was ungeprüft bleibt.',
+    '',
+    'Bitte gib eine kurze, nachvollziehbare Prüftabelle mit Ergebnis, Beleg (Feature/Log) und offenen Punkten aus.'
+  ].join('\n');
+}
+function renderOptionalAiAudit(content, configuration){
+  const details=el('details',{class:'settings-group ai-review'});
+  details.append(el('summary',{text:'Optional: Skript mit der ViEventLog-KI prüfen'}));
+  details.append(el('p',{class:'hint',text:'Freiwillige zusätzliche Kontrolle – kein Pflichtschritt und keine Voraussetzung für den Export. Öffne später das Skript im ViEventLog-Editor und füge diesen Prüfauftrag bei „KI-Hilfe zu diesem Skript“ ein.'}));
+  details.append(el('p',{class:'hint',text:'Die Prüfung ist unabhängig vom gewählten KI-Modell. Sie ersetzt weder einen erfolgreichen Expr-Testlauf noch einen kontrollierten späteren Gerätetest.'}));
+  const prompt=makeAiAuditPrompt(configuration);
+  const area=el('textarea',{class:'code ai-prompt',readonly:'readonly','aria-label':'Optionaler KI-Prüfauftrag'});
+  area.value=prompt;
+  details.append(area);
+  const buttons=el('div',{class:'buttons'});
+  const copy=el('button',{type:'button',class:'btn secondary',text:'KI-Prüfauftrag kopieren'});
+  copy.addEventListener('click',async()=>{
+    try{
+      if(!navigator.clipboard || !navigator.clipboard.writeText)throw Error('Clipboard nicht verfügbar');
+      await navigator.clipboard.writeText(prompt);
+      $('message').textContent='Optionaler KI-Prüfauftrag kopiert.';
+    }catch(e){
+      area.focus();area.select();
+      $('message').textContent='Prüfauftrag markiert – bitte manuell kopieren.';
+    }
+  });
+  buttons.append(copy);details.append(buttons);
+  details.append(el('p',{class:'hint ai-privacy',text:'Datenschutz: Keine API-Schlüssel, Passwörter oder Zugangstoken in den Prüfauftrag eingeben. Bei Live-Abfragen können Geräteinformationen an den jeweils eingerichteten KI-Anbieter übermittelt werden.'}));
+  content.append(details);
+}
+function render(){const content=$('content');content.replaceChildren();$('step-title').textContent=labels[step];$('step-num').textContent=(step+1)+' / '+labels.length;const dots=$('dots');dots.replaceChildren(...labels.map((v,i)=>{const b=el('button',{type:'button',class:'step-dot '+(i===step?'active':i<step?'done':'')},[el('span',{text:String(i+1)}),el('small',{text:v})]);b.addEventListener('click',()=>{step=i;render();});return b;}));
+  if(step===0){content.append(heading('Wie soll deine Warmwasserbereitung starten?','Wähle zuerst die verfügbare Datenbasis. Ob das Zeitprogramm oder eine Einmalladung ausgelöst wird, wählst du später unter „Warmwasser“.'),
+    radio('mode','forecast_only','Nur PV-Prognose','Kein Wechselrichter-Zugang nötig. Es wird keine tatsächliche Einspeisung gemessen.',state.community.mode==='forecast_only',v=>{state.community.mode=v;state.community.pv_source='none';state.settings.early_surplus_enabled=false;state.settings.heating_credit_enabled=false;}),
+    radio('mode','hybrid','PV-Prognose + echte Messwerte','Beste Prognosestunde planen und optional früher bei bestätigter Einspeisung starten.',state.community.mode==='hybrid',v=>{state.community.mode=v;state.community.pv_source='evcc';}),
+    info('Wichtig: Prognostizierte PV-Erzeugung ist nicht gleich Netzüberschuss. Ohne Messwerte wird die PV-Deckung nicht nachgewiesen.','warn'));
+  }
+  if(step===1){content.append(heading('Woher kommen Prognose und Stromdaten?','Alle Verbindungen muss später der ViEventLog-Server erreichen, nicht dein Smartphone.'),
+    el('h3',{text:'ViEventLog läuft auf'}));const platforms=[['windows','Windows-PC'],['linux','Linux-PC'],['raspberry','Raspberry Pi'],['nas','NAS / Docker'],['other','Anderes']];const sel=el('select',{class:'select'});for(const [v,t]of platforms){const o=el('option',{value:v,text:t});if(v===state.community.platform)o.selected=true;sel.append(o);}sel.addEventListener('change',()=>{state.community.platform=sel.value;renderStatus();});content.append(sel,el('h3',{text:'Wetterprognose: Open-Meteo'}),info('Open-Meteo wird als einzige Prognosequelle verwendet. Die Standortdaten werden erst beim Ausführen des exportierten Expr-Skripts abgefragt.'));
+    {content.append(info('BEISPIELSTANDORT BERLIN: 52.5200° Nord / 13.4050° Ost. Die Koordinaten sind nur für eine erste Anschauung vorbelegt. Für die eigene Anlage beide Werte anpassen!','warn'));const grid=el('div',{class:'two'});grid.append(txt('Breitengrad',state.community.latitude,v=>{state.community.latitude=v;state.community.example_location=false;},{placeholder:'z. B. 52.5200'}),txt('Längengrad',state.community.longitude,v=>{state.community.longitude=v;state.community.example_location=false;},{placeholder:'z. B. 13.4050'}));content.append(grid,info('Es erfolgt kein Wetterabruf durch die HTML-Datei. Python kann später Open-Meteo lesen und daraus einen Zeitslot vorschlagen.'));}
+    if(state.community.mode==='hybrid'){content.append(el('h3',{text:'PV-/Netzleistungsmessung'}));const opts=[['evcc','evcc','Fertige JSON-Abfrage grid.power (positiv Netzbezug).'],['homeassistant','Home Assistant','Eigener Sensorzustand; Token-Platzhalter im Diagnoseskript.'],['generic_json','JSON-API','Für andere Wechselrichter mit zugänglicher JSON-API.'],['zappi_adapter','myenergi Zappi','Direkte, nur lesende Abfrage im Python-Paket via HTTP Digest. Kein zusätzlicher Adapterdienst nötig.']];for(const [v,title,d]of opts)content.append(radio('pv',v,title,d,state.community.pv_source===v,val=>{state.community.pv_source=val; if(val==='evcc'){state.community.pv_url='http://192.168.1.10:7070/api/state';state.community.pv_path='grid.power';}if(val==='homeassistant'){state.community.pv_url='http://homeassistant:8123/api/states/sensor.grid_power';state.community.pv_path='state';}if(val==='zappi_adapter'){state.community.pv_url='';state.community.pv_path='';}}));
+      if(state.community.pv_source==='zappi_adapter')content.append(info('Zappi benötigt hier keine API-Adresse. Der Python-Teil nutzt Gateway-Seriennummer, myenergi-API-Key und Server (z. B. s18) ausschließlich aus lokalen Umgebungsvariablen. Der HTML-Export speichert keine Zugangsdaten. Im ViEventLog-Expr-Export bleibt die Zappi-Abfrage deaktiviert. Ein einziger GET-Messwert löst keine Warmwasserladung aus.'));
+      else content.append(txt('HTTP(S)-API-Adresse',state.community.pv_url,v=>state.community.pv_url=v,{placeholder:'http://.../api/state'}),txt('Pfad des Netzleistungswertes',state.community.pv_path,v=>state.community.pv_path=v,{placeholder:'grid.power'}),switcher('Vorzeichen umkehren',state.community.pv_invert,v=>state.community.pv_invert=v,'Erwartet wird: positiver Wert = Netzbezug, negativer Wert = Einspeisung.'));
+    }
+  }
+  if(step===2){content.append(heading('Warmwasser und Ausfallsicherheit','Die Morgenreserve und die PV-Tagesladung sind voneinander getrennt.'));
+    content.append(el('h3',{text:'Wie soll die Wärmepumpe die Warmwasserbereitung auslösen?'}),
+      radio('dhwmethod','schedule','Über das ViCare-Zeitprogramm','Bestehendes Warmwasserfenster vorübergehend verschieben, vollständig sichern, kontrolliert zurücklesen und später wiederherstellen.',state.settings.dhw_control_method==='schedule',v=>{state.settings.dhw_control_method=v;}),
+      radio('dhwmethod','one_time','Einmalige Warmwasserbereitung','Zum berechneten PV-Zeitpunkt eine Einmalladung anfordern. Das Wochenprogramm wird nicht verändert.',state.settings.dhw_control_method==='one_time',v=>{state.settings.dhw_control_method=v;}));
+    if(state.settings.dhw_control_method==='one_time')content.append(info('Voraussetzung: Die Anlage unterstützt heating.dhw.oneTimeCharge. Vor einer späteren Auslösung müssen Warmwasser-Sollwert, aktiver Ladezustand, doppelte Anforderungen und eine mögliche Sollwert-Rückstellung abgesichert sein. Noch keine Live-Auslösung.','warn'));
+    content.append(switcher('Morgenreserve aktiv',state.settings.morning_enabled,v=>setParam('morning_enabled',v),core.SCHEMA.find(x=>x.key==='morning_enabled').help),switcher('Tagesladung aktiv',state.settings.main_enabled,v=>setParam('main_enabled',v),core.SCHEMA.find(x=>x.key==='main_enabled').help));
+    const fields=['morning_time','morning_check_minutes','morning_below_c','morning_target_c','main_target_c','pv_earliest','pv_latest'];const grid=el('div',{class:'two'});fields.forEach(key=>grid.append(fieldFor(core.SCHEMA.find(x=>x.key===key))));content.append(grid,el('h3',{text:'Wenn Daten fehlen'}));
+    content.append(radio('weatherfail','manual_latest','Spätester erlaubter Zeitpunkt als Rückfall','Notwendige WW-Ladung soll auch bei nicht ausreichender Prognose eingeplant werden – erst später implementieren und testen.',state.community.no_forecast_policy==='manual_latest',v=>state.community.no_forecast_policy=v),radio('weatherfail','hold','Bei fehlender Prognose keinen PV-Start auslösen','Ohne zusätzliche Sicherheitsladung kann Warmwasser ausbleiben.',state.community.no_forecast_policy==='hold',v=>state.community.no_forecast_policy=v));
+    if(state.community.mode==='hybrid')content.append(el('h3',{text:'Wenn die PV-Messwerte ausfallen'}),radio('gridfail','forecast_only','Auf Prognose umschalten','Keine gemessene Überschussbestätigung.',state.community.missing_grid_policy==='forecast_only',v=>state.community.missing_grid_policy=v),radio('gridfail','hold','Messwertbasierten Frühstart blockieren','Keine Entscheidung mit erfundener Netzleistung.',state.community.missing_grid_policy==='hold',v=>state.community.missing_grid_policy=v));
+    if(state.community.mode==='hybrid'){
+      content.append(el('h3',{text:'Frühstart bei gemessener PV-Einspeisung'}),
+        switcher('Frühstart bei bestätigtem Überschuss erlauben',state.settings.early_surplus_enabled,v=>{setParam('early_surplus_enabled',v);render();},'Nur möglich mit echten, frischen Netzmesswerten; keine Startfreigabe aus einer bloßen PV-Prognose.'));
+      if(state.settings.early_surplus_enabled){
+        content.append(radio('surplustype','manual','Fester Überschusswert','Zum Beispiel 1.800 W tatsächliche Netzeinspeisung über die eingestellte Bestätigungsdauer.',state.settings.early_surplus_mode==='manual',v=>{state.settings.early_surplus_mode=v;}),
+          radio('surplustype','auto','Wetter bestimmt den Grenzwert','Geschätzte höchste PV-Leistung aus Open-Meteo minus einstellbarem Abschlag. Gemessene Einspeisung bleibt Pflicht.',state.settings.early_surplus_mode==='auto',v=>{state.settings.early_surplus_mode=v;state.settings.use_panel_orientation=true;}));
+        const g=el('div',{class:'two'});
+        if(state.settings.early_surplus_mode==='manual')g.append(fieldFor(core.SCHEMA.find(x=>x.key==='early_surplus_w')));
+        else ['auto_surplus_discount_w','auto_surplus_min_w','auto_surplus_max_w','auto_pv_dc_kwp','auto_pv_ac_kw','auto_pv_performance','panel_tilt_deg','panel_azimuth_deg'].forEach(k=>g.append(fieldFor(core.SCHEMA.find(x=>x.key===k))));
+        g.append(fieldFor(core.SCHEMA.find(x=>x.key==='early_surplus_minutes')));
+        content.append(g);
+        if(state.settings.early_surplus_mode==='auto')content.append(info('Die vorbelegten Werte 9,24 kWp, 8 kW, 30° und Süd (Azimut 0°) sind BEISPIELE. Die automatische Schwelle ist sonst für andere PV-Anlagen falsch.','warn'));
+      }
+    }
+    content.append(info('Sicherheitsstand: Open-Meteo erstellt den PV-Zeitvorschlag. Je nach Auslöseverfahren simuliert Python eine Zeitprogramm-Verschiebung oder eine Einmalladung. Keine Geräteaktionen.','warn'));
+  }
+  if(step===3){content.append(heading('Weitere Einstellungen','Hier lassen sich die zusätzlichen Einstellungen anpassen. Die Warmwasser-Auslösung wählst du ausschließlich im Schritt „Warmwasser“. Nicht alle Felder wirken in jeder Betriebsart.')); for(const [group,name]of Object.entries(core.GROUPS)){const details=el('details',{class:'settings-group'});details.append(el('summary',{text:name}));const grid=el('div',{class:'two'});core.SCHEMA.filter(x=>x.group===group&&x.key!=='dhw_control_method').forEach(d=>grid.append(fieldFor(d)));details.append(grid);if(group==='pv'&&state.community.mode==='forecast_only')details.append(info('Messwertabhängige PV-Funktionen bleiben in der Konfiguration dokumentiert, sind in der Prognose-only-Betriebsart aber nicht verfügbar.','warn'));content.append(details);}content.append(info('Der Python-Teil simuliert Zeitprogramm und Einmalladung getrennt. Keine Schreibvorgänge: Vor dem späteren Live-Betrieb sind gerätespezifische Prüfungen notwendig.','warn'));}
+  if(step===4){renderForecastPreview(content);}
+  if(step===5){renderSafetyPreview(content);}
+  if(step===6){renderSchedulePreview(content);}
+  if(step===7){const result=core.validate(state);content.append(heading('Konfiguration exportieren','Der Expr-Tagesplan V0.4.3 berechnet und merkt sich den Vorschlag im ViEventLog-Skriptzustand – NICHT in ViCare. Der Testlauf speichert nichts dauerhaft. Das exportierte JSON dient weiterhin dem Python-Testplaner. Beide Verfahren sind rein diagnostisch.'),info('V0.6.4: Zwei Auslöseverfahren. Expr V0.4.3 nutzt get()/set() für einen festgehaltenen Tagesplan; set() wird nur bei regulärem Lauf persistent, im Testlauf NICHT. Kein Einmalstart und keine Zeitprogrammänderung. Einen späteren Methodenwechsel am selben Tag blockiert der Skriptstatus. Bei erster Nutzung eigenes Standortbeispiel Berlin ersetzen.','warn'));
+    if(result.errors.length){const e=el('div',{class:'note error'});e.append(el('strong',{text:'Bitte korrigieren:'}));for(const t of result.errors)e.append(el('p',{text:'• '+t}));content.append(e);}
+    const section=el('div',{class:'export-tabs'});for(const [v,label]of [['planner','Tagesplan + Status (Expr)'],['expr','Verbindungstest (Expr)'],['json','Konfiguration (JSON)']]){const b=el('button',{type:'button',class:v===output?'selected':'',text:label});b.addEventListener('click',()=>{output=v;render();});section.append(b);}content.append(section); const code=result.errors.length && output==='planner'?'// Bitte zuerst die fehlerhaften Angaben korrigieren.\n':output==='planner'?globalThis.CommunityWWExpr.make(state):output==='expr'?core.diagnosticExpr(state):core.cfgJson(state);const ta=el('textarea',{class:'code',readonly:'readonly','aria-label':'Ausgabe'});ta.value=code;content.append(ta);
+    const buttons=el('div',{class:'buttons'});const copy=el('button',{class:'btn primary',type:'button',text:'Kopieren'});copy.disabled=result.errors.length>0;copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(code);$('message').textContent='In die Zwischenablage kopiert.';}catch(e){ta.focus();ta.select();$('message').textContent='Text markieren und manuell kopieren.';}});
+    const dl=el('button',{class:'btn secondary',type:'button',text:'Datei speichern'});dl.disabled=result.errors.length>0;dl.addEventListener('click',()=>{const blob=new Blob([code],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob),link=el('a',{href:url,download:output==='planner'?'vieventlog_ww_tagesplan_v043.expr':output==='expr'?'vieventlog_ww_lesetest_v062.expr':'community_ww_konfiguration_v064.json'});link.click();URL.revokeObjectURL(url);});buttons.append(copy,dl);content.append(buttons);
+    if(result.warnings.length){const block=el('div',{class:'note warn'});block.append(el('strong',{text:'Hinweise'}));for(const w of result.warnings)block.append(el('p',{text:'• '+w}));content.append(block);}
+    renderOptionalAiAudit(content,state);
+  }
+  $('back').disabled=step===0;$('next').textContent=step===labels.length-1?'Zurück zum Anfang':'Weiter';$('next').onclick=()=>{step=step===labels.length-1?0:step+1;render();window.scrollTo({top:0,behavior:'smooth'});};$('back').onclick=()=>{step=Math.max(0,step-1);render();};renderStatus();
+}
+function renderSchedulePreview(content){
+  if(state.settings.dhw_control_method==='one_time'){
+    content.append(heading('Einmalige Warmwasserbereitung – sichere Vorschau','Der Open-Meteo-Planer ermittelt den Zeitpunkt. Statt das Wochenprogramm zu ändern, würde die Anlage dann eine einmalige Warmwasserbereitung anfordern.'));
+    const selected=lastForecastSuggestion || state.settings.pv_earliest;
+    const card=el('div',{class:'schedule-preview'});
+    card.append(el('h3',{text:'Beispiel: Auslösung um '+selected+' Uhr'}),
+      el('p',{text:'Anforderungsweg: ViEventLog startDhwOneTimeCharge() / Feature heating.dhw.oneTimeCharge.'}),
+      el('p',{class:'hint',text:'Das vorhandene ViCare-Wochenprogramm wird hierbei nicht verschoben. Die Vorschau löst keine echte Warmwasserbereitung aus.'}));
+    const stages=el('div',{class:'schedule-stages'});
+    for(const [h,t] of [
+      ['1 · Prüfen','Gerät unterstützt Einmalladung; Ist-/Solltemperatur und Ladezustand aktuell'],
+      ['2 · Planen','Geeigneten PV-Zeitpunkt bestimmen und Doppelstarts sperren'],
+      ['3 · Anfordern','Erst im späteren Live-Betrieb eine einzige Einmalladung anfordern'],
+      ['4 · Nachweisen','Physische WW-Ladung beobachten; ggf. zuvor geänderten Sollwert gesichert rückstellen']
+    ])stages.append(el('div',{class:'schedule-stage'},[el('strong',{text:h}),el('span',{text:t})]));
+    card.append(stages);
+    content.append(card,info('Einmalige Warmwasserbereitung nutzt den aktuell gültigen WW-Sollwert. Für die konfigurierten Morgen-/Tagesziele ist später ein eigener, bestätigter Sollwert-Ablauf mit Rückstellung nötig. Der genaue Ladeerfolg wird nicht durch eine erfolgreiche API-Antwort bewiesen.','warn'));
+    return;
+  }
+
+  content.append(heading('ViCare-Zeitprogramm sicher verschieben','Hier wird der Ablauf simuliert, den der getrennte Python-Zeitplanmotor für die Warmwasserbereitung vorbereitet. Alle Werte sind Beispiele und ändern keine Anlage.'));
+  content.append(info('Die lokale HTML-Datei führt keine Geräteaktionen aus. Open-Meteo wird jetzt im Python-Baustein zur Auswahl des Zeitfensters verwendet; echte Schreibaktionen bleiben gesperrt, bis Schnittstelle, Wiederherstellung und Gerätezustände geprüft sind.','warn'));
+  const grid=el('div',{class:'two'});
+  let orig='15:00',target=lastForecastSuggestion||'13:00',duration=80;
+  if(lastForecastSuggestion)content.append(info('Der geplante PV-Start stammt aus deiner letzten '+(lastForecastIsDemo?'künstlichen Beispielprognose':'eingefügten Prognose-JSON')+' ('+lastForecastSuggestion+' Uhr). Nur eine Vorschau; keine Schaltaktion.'));
+  else content.append(info('Start 13:00 Uhr ist ein freies Beispiel. Für eine aus der Prognose abgeleitete Uhrzeit zuerst in „Prognose prüfen“ rechnen.')); 
+  const origInput=txt('Bisheriger Start (Beispiel)',orig,v=>{orig=v;preview();},{type:'time'});
+  const targetInput=txt('Gewünschter PV-Start',target,v=>{target=v;preview();},{type:'time'});
+  const durInput=txt('Dauer des bisherigen Zeitfensters (Min.)',String(duration),v=>{duration=Number(v);preview();},{type:'number'});
+  grid.append(origInput,targetInput,durInput);content.append(grid);
+  const result=el('div',{class:'schedule-preview'});content.append(result);
+  function preview(){
+    result.replaceChildren();
+    const toMin=v=>/^([01]\d|2[0-3]):[0-5]\d$/.test(String(v))?Number(v.slice(0,2))*60+Number(v.slice(3,5)):NaN;
+    const a=toMin(orig),b=toMin(target),d=duration;
+    if(!Number.isInteger(d)||d<10||d>240||d%10!==0||!Number.isFinite(a)||!Number.isFinite(b)||a%10||b%10||a+d>1440||b+d>1440){
+      result.append(info('Bitte Zeiten im 10-Minuten-Raster und eine passende Dauer zwischen 10 und 240 Minuten wählen. Zeitfenster dürfen nicht über Mitternacht gehen.','warn'));return;
+    }
+    result.append(el('h3',{text:'Beispiel: Tagesprogramm vor und nach der PV-Planung'}));
+    for(const [title,start,kind] of [['Ursprüngliches ViCare-Zeitfenster',a,'original'],['Vorübergehend verschobenes Fenster',b,'planned']]){
+      result.append(el('div',{class:'timeline-label',text:title}));
+      const bar=el('div',{class:'schedule-bar'});
+      const from=6*60,to=22*60,clipStart=Math.max(from,start),clipEnd=Math.min(to,start+d);
+      if(clipEnd>clipStart){
+        const slot=el('div',{class:'schedule-slot '+kind,text:('0'+Math.floor(start/60)).slice(-2)+':'+('0'+start%60).slice(-2)+'–'+('0'+Math.floor((start+d)/60)).slice(-2)+':'+('0'+(start+d)%60).slice(-2)});
+        slot.style.left=((clipStart-from)/(to-from)*100)+'%';slot.style.width=((clipEnd-clipStart)/(to-from)*100)+'%';bar.append(slot);
+      }
+      result.append(bar,el('div',{class:'schedule-scale'},[el('span',{text:'06:00'}),el('span',{text:'14:00'}),el('span',{text:'22:00'})]));
+    }
+    const restore=Math.max(a+d,b+d)+20;
+    const fmt=m=>(m>=1440?'Folgetag ':'')+String(Math.floor(m%1440/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+    const stages=el('div',{class:'schedule-stages'});
+    for(const [h,t] of [['1 · Sichern','Originalen 7-Tage-Plan vollständig lesen und lokal sichern'],['2 · Verschieben','Nur heutigen Block auf '+target+' versetzen; übrige Tage erhalten'],['3 · Bestätigen','Zeitprogramm zurücklesen; Ladung nicht bloß vermuten'],['4 · Rückstellen','Frühestens '+fmt(restore)+' und nur bei bestätigtem Ladeende']]){
+      stages.append(el('div',{class:'schedule-stage'},[el('strong',{text:h}),el('span',{text:t})]));
+    }
+    result.append(stages);
+    result.append(el('p',{class:'hint',text:'Die Anwendung verwendet später das tatsächliche Gerätezentraster (z. B. 10 Minuten). Abweichende Zeitprogramme oder ein unklarer Schreibstatus werden nicht automatisch überschrieben.'}));
+  }
+  preview();
+  content.append(info('Für technische Tests: Im ZIP-Paket sind community_schedule.py, community_one_time.py, der lesende ViEventLog-Adapter, die Kommandozeile und die automatisierten Tests enthalten. Das JSON aus Schritt 8 kann mit `python3 ww_cli.py plan --config community_ww_konfiguration_v06.json` den Open-Meteo-Planer samt Wochenplanmotor lesend ausführen. Für eine Offline-Demo enthält das ZIP Beispieldateien.'));
+}
+function renderForecastPreview(content){
+  content.append(heading('Prognosezeitpunkt prüfen','Die Vorschau berechnet aus JSON-Prognosedaten die beste noch nutzbare Stunde. Alle Berechnungen laufen lokal in deinem Browser.'));
+  content.append(info('Wichtig: Die Vorschau verwendet zunächst künstliche Beispieldaten. Es findet kein Internetabruf statt und die Wärmepumpe wird nicht geschaltet.','warn'));
+  const p=globalThis.CommunityWWPlanner;
+  const today=p.dayKey(new Date());
+  const options=el('div',{class:'two'});
+  const timeWrap=el('label',{class:'field'},[el('span',{class:'field-label',text:'Simulierte Uhrzeit (Berlin)'})]);
+  const timeInput=el('select',{class:'select'});
+  for(let minute=0;minute<24*60;minute+=10){const v=String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');const opt=el('option',{value:v,text:v+' Uhr'});opt.selected=v===simHour;timeInput.append(opt);}
+  timeInput.addEventListener('change',()=>{simHour=timeInput.value;render();});timeWrap.append(timeInput,el('small',{class:'hint',text:'Hier wird ausschließlich die Prognoseentscheidung zu einer frei gewählten Uhrzeit simuliert – ohne Anlagenaktion.'}));options.append(timeWrap);
+  const srcWrap=el('div',{class:'field'},[el('span',{class:'field-label',text:'Prognosedaten'})]);
+  const sample=el('button',{class:'btn secondary',type:'button',text:'Beispieldaten neu laden'});
+  sample.addEventListener('click',()=>{forecastInput=JSON.stringify(p.demoData(state,today),null,2);isDemo=true;render();});
+  srcWrap.append(sample,el('small',{class:'hint',text:'Oder unten eigene Open-Meteo-JSON-Antwort einfügen.'}));options.append(srcWrap);content.append(options);
+  if(isDemo||!forecastInput){forecastInput=JSON.stringify(p.demoData(state,today),null,2);isDemo=true;}
+  const label=el('label',{class:'field'},[el('span',{class:'field-label',text:'Prognose-JSON (Open-Meteo)'})]);
+  const input=el('textarea',{class:'code json-input','aria-label':'Prognose-JSON'});
+  input.value=forecastInput;
+  input.addEventListener('input',()=>{forecastInput=input.value;isDemo=false;});
+  label.append(input);content.append(label);
+  const run=el('button',{class:'btn primary',type:'button',text:'Beste Prognosestunde berechnen'});
+  const result=el('div',{id:'forecast-result'});
+  run.addEventListener('click',()=>showForecastResult(result));
+  content.append(el('div',{class:'buttons'},[run]),result);
+  if(isDemo)showForecastResult(result);
+  function showForecastResult(node){
+    node.replaceChildren();let preview;
+    try{
+      const payload=JSON.parse(forecastInput);
+      if(!/^\d\d:\d\d$/.test(simHour))throw Error('Simulationsuhrzeit ungültig.');
+      const t=p.berlinToInstants(today,simHour);
+      if(t.length!==1)throw Error('Simulationszeit am Tag der Zeitumstellung nicht eindeutig.');
+      preview=p.compute(payload,state,new Date(t[0]));
+      lastForecastSuggestion=preview.winner?p.clock(new Date(preview.winner.start)):null;lastForecastIsDemo=isDemo;
+    }catch(e){node.append(info('Keine Auswertung möglich: '+String(e.message||e),'error'));return;}
+    const status=el('div',{class:'forecast-outcome'});
+    status.append(el('span',{class:'forecast-kicker',text:isDemo?'BEISPIEL / KEINE ECHTEN WETTERDATEN':'LOKALE JSON-PRÜFUNG / NICHT LIVE'}));
+    status.append(el('h3',{text:preview.winner?'Beste verbleibende Prognosestunde':'Keine geeignete Stunde'}));
+    status.append(el('p',{text:preview.summary}));
+    if(preview.winner&&preview.winner.estimatedPowerKw!==null){
+      status.append(el('p',{class:'hint',text:'Geschätzte elektrische Leistung: '+preview.winner.estimatedPowerKw.toFixed(2)+' kW (keine gemessene Einspeisung).'}));
+    }
+    const threshold=globalThis.CommunityWWThreshold.calculate(state,preview);
+    if(state.community.mode==='hybrid'){
+      const heading=threshold.mode==='manual'?'Fester Grenzwert':threshold.mode==='auto'?'Wetterabhängiger Grenzwert':'Frühstart';
+      status.append(el('p',{text:heading+': '+(threshold.watts===null?'nicht berechenbar / deaktiviert':threshold.watts.toLocaleString('de-DE')+' W Netzeinspeisung')}));
+      status.append(el('p',{class:'hint',text:threshold.reason+' Bestätigungsdauer: '+state.settings.early_surplus_minutes+' Minuten.'}));
+    }
+    if(preview.fallback)status.append(el('p',{class:'hint',text:'Konfigurierter Rückfall: '+preview.fallback.time+' Uhr, sofern später sicher freigegeben.'}));
+    node.append(status);
+    if(preview.candidates.length){const table=el('table',{class:'preview-table'});
+      const thead=el('thead');thead.append(el('tr',{},[el('th',{text:'Rang'}),el('th',{text:'Beginn'}),el('th',{text:'Prognosewert'}),el('th',{text:'Fenster'})]));table.append(thead);
+      const tbody=el('tbody');preview.candidates.slice(0,5).forEach((v,i)=>tbody.append(el('tr',{},[el('td',{text:String(i+1)}),el('td',{text:p.clock(new Date(v.start))+' Uhr'}),el('td',{text:v.value.toFixed(0)+' '+preview.unit}),el('td',{text:v.window})])));table.append(tbody);node.append(table);
+    }
+    for(const warning of preview.warnings)node.append(el('p',{class:'hint forecast-hint',text:'• '+warning}));
+    if(state.community.mode==='forecast_only')node.append(info('Ohne Netzleistungsmessung gibt es weder bestätigten PV-Überschuss noch eine belastbare PV-Deckungsquote.'));
+  }
+}
+function renderSafetyPreview(content){
+  content.append(heading('Sicherheitsentscheidungen simulieren','Hier siehst du, warum der spätere Regler einen Start empfehlen oder blockieren würde. Die Prüfung ist lokal und schaltet nichts.'));
+  const cases=[
+    ['morning','Morgenreserve nötig – 38 °C um 06:00','candidate','MORNING'],
+    ['day','PV-Stunde erreicht – 43 °C um 13:00','candidate','PV_DUE'],
+    ['not-yet','Prognosezeit noch nicht erreicht','none','PV_WAIT'],
+    ['active','Warmwasser läuft bereits','none','ALREADY_CHARGING'],
+    ['missing-temp','Temperatur nicht verfügbar','blocked','TEMP_UNKNOWN'],
+    ['stale','Ladezustand veraltet','blocked','CHARGE_STALE'],
+    ['pending','Start schon angefordert, Ausgang unklar','blocked','PENDING'],
+    ['morning-done','Morgenreserve erledigt, Tagesladung weiter möglich','candidate','PV_DUE'],
+    ['day-done','PV-Tagesladung bereits erledigt','none','MAIN_DONE'],
+    ['no-forecast','Keine Prognose, Rückfall um 16:00','candidate','FALLBACK_DUE']
+  ];
+  const select=el('select',{class:'select','aria-label':'Sicherheitsfall'});
+  for(const [id,title] of cases)select.append(el('option',{value:id,text:title}));
+  content.append(select);
+  const box=el('div',{class:'forecast-outcome'});content.append(box);
+  const action=()=>{
+    box.replaceChildren();const key=select.value;
+    const t=globalThis.CommunityWWPlanner.berlinToInstants('2026-11-06',key==='morning'?'06:00':key==='no-forecast'?'16:00':'13:00')[0];
+    const now=new Date(t);
+    const inState={configuration:structuredClone(state),now,temperature:key==='morning'?38:43,chargeState:key==='active'?'active':'idle',chargeObservedAt:t,record:{day:'2026-11-06',morning:'none',main:'none'},forecastTime:new Date(t)};
+    if(key==='missing-temp')inState.temperature=null;
+    if(key==='stale')inState.chargeObservedAt=t-11*60000;
+    if(key==='pending')inState.record.main='pending';
+    if(key==='morning-done')inState.record.morning='completed';
+    if(key==='day-done')inState.record.main='completed';
+    if(key==='not-yet')inState.forecastTime=new Date(t+60*60000);
+    if(key==='no-forecast'){inState.forecastTime=null;inState.configuration.community.no_forecast_policy='manual_latest';}
+    try{
+      const d=globalThis.CommunityWWDecision.decide(inState);
+      box.append(el('span',{class:'forecast-kicker',text:'SIMULATION / KEIN GERÄTEBEFEHL'}),
+        el('h3',{text:d.decision==='candidate'?'Start wäre grundsätzlich denkbar':d.decision==='blocked'?'Start gesperrt':'Kein Start erforderlich'}),
+        el('p',{text:d.code+' – '+d.reason}));
+      if(d.targetC!=null)box.append(el('p',{class:'hint',text:'Vorgeschlagene Zieltemperatur: '+d.targetC+' °C. Es wird kein Befehl ausgeführt.'}));
+      if(key==='morning-done')box.append(el('p',{class:'hint',text:'Eine erledigte Morgenreserve sperrt die unabhängige PV-Tagesladung nicht.'}));
+    }catch(e){box.append(info('Simulation mit diesen Einstellungen nicht möglich: '+e.message,'error'));}
+  };
+  select.addEventListener('change',action);action();
+  content.append(info('Wichtig: Für echte Anlagenaktionen fehlen noch verifizierte Viessmann-Rückmeldungen, persistente Statuswechsel und gerätespezifische Tests.','warn'));
+}
+function fieldFor(d){if(!d)return el('span');if(d.type==='bool')return switcher(d.label,state.settings[d.key],v=>setParam(d.key,v),d.help);
+  if(d.type==='enum'){const wrap=el('label',{class:'field'});wrap.append(el('span',{class:'field-label',text:d.label}));const inp=el('select',{class:'select'});d.min.forEach(x=>{const o=el('option',{value:x,text:x});o.selected=x===state.settings[d.key];inp.append(o);});inp.addEventListener('change',()=>{setParam(d.key,inp.value);});wrap.append(inp);if(d.help)wrap.append(el('small',{class:'hint',text:d.help}));return wrap;}
+  return txt(d.label,state.settings[d.key],v=>setParam(d.key,v),{type:(d.type==='int'||d.type==='number')?'number':'text',min:d.min??undefined,max:d.max??undefined,step:d.type==='int'?'1':d.type==='number'?'any':undefined,help:d.help});
+}
+function renderStatus(){const r=core.validate(state);$('status').textContent=r.errors.length?`${r.errors.length} Eingaben zu prüfen`:'Einstellungen plausibel';$('status').className=r.errors.length?'bad':'good';}
+render();
+})();
+
+</script></body></html>

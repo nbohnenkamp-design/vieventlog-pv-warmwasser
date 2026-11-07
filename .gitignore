@@ -1,0 +1,15 @@
+# Lokale Laufzeitdaten und Python-Cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+.env.*
+ww_state/
+nur-test-daten/
+*.log
+*.tmp
+.DS_Store
+# Keine Zappi-/ViEventLog-Zugangsdaten einchecken
+secrets*.json
+*credentials*.json
