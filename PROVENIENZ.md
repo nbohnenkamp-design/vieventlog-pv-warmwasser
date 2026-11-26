@@ -10,4 +10,4 @@ Die Funktionalität wird über dokumentierte ViEventLog-Expr-Funktionen und Open
 
 Das Repo enthält keine persönlichen ViCare-Zugangsdaten. Alle Beispielkoordinaten sind ausdrücklich als Berlin-Beispiel gekennzeichnet. Benutzer sollen ihre individuellen JSON-Profile und Skripte mit Tokens nicht öffentlich weitergeben.
 
-Eine öffentliche Softwarelizenz wurde noch nicht festgelegt.
+Dieses Community-Repository steht unter der [MIT-Lizenz](LICENSE). ViEventLog von Matthias Schneider verwendet ebenfalls MIT; die Projekte haben getrennte Urheberhinweise.

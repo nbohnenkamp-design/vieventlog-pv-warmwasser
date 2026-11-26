@@ -1,5 +1,9 @@
 # Änderungsverlauf
 
+## Veröffentlichungshinweis — 26.11.2026
+- Projekt mit MIT-Lizenz versehen, entsprechend ViEventLog; eigener Urhebervermerk.
+- Dokumentationshinweise zur Lizenz aktualisiert, keine Änderung der Steuerlogik.
+
 ## V0.6.21 — aktueller Community-Teststand
 - Bereits gespeicherte Sonnenpläne enthalten nun Sonnenstundenbeginn und angewendeten Startversatz, um zukünftige Terminänderungen nachvollziehbar zu machen.
 - Geänderte Startverschiebung: noch ausstehende Sonnenpläne werden aus gespeicherter Berechnungsgrundlage umgerechnet; ältere Pläne werden nur im erlaubten Zeitfenster über begrenzte Wetter-Neuabfragen aktualisiert.

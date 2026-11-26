@@ -22,6 +22,6 @@
 - Kein unabhängiger Nachweis, wie viele Viessmann-Cloudaufrufe **alle** parallelen Anwendungen zusammen erzeugen.
 - Kein verifizierter 24-Stunden-Log-Export sämtlicher regulärer Cron-Läufe; nur die vorgelegten Einzelprotokolle.
 - **Zeitprogrammverschiebung über Expr ist nicht implementiert.**
-- Die endgültige Entscheidung über eine öffentliche Weiterverwendungslizenz steht aus.
+- Die Veröffentlichung steht unter der MIT-Lizenz. Der Urhebervermerk lautet `Copyright (c) 2026 nbohnenkamp-design`.
 
 **Verwendung:** Als nachvollziehbar dokumentierten Beobachtungs-Teststand zeigen; nicht als vollständig freigegebene Live-Steuerung bezeichnen.

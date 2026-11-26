@@ -45,7 +45,7 @@ Im ViEventLog-Skript unter **Protokoll** die Option **„auch Läufe ohne Änder
 - Diese Version verwendet für Datums-/Zeitberechnungen **Europe/Berlin**. Die eingetragenen Koordinaten allein ändern die Zeitzone nicht.
 - Bei aktivem `latest` kann auch an einem bewölkten Tag eine Ladung nahe dem PV-Fensterende geplant werden.
 - Für Home Assistant müssen eventuell erforderliche Tokens **nur lokal im erzeugten Skript** ergänzt werden. Niemals eigene Tokens, Skripte mit Zugangsdaten oder persönliche JSON-Einstellungsprofile ins Forum/GitHub hochladen.
-- Ohne eine explizit festgelegte Lizenzdatei ist die rechtliche Nachnutzung noch nicht geregelt.
+- **Lizenz:** [MIT](LICENSE), wie das zugrunde liegende ViEventLog-Projekt. Bei Weitergabe müssen der Urheber- und Lizenzhinweis erhalten bleiben.
 
 ### API-Nutzung
 
