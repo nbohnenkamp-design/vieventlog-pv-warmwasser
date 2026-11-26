@@ -1,0 +1,664 @@
+// ================================================================
+// EINSTELLUNGEN – NUR DIESEN ABSCHNITT BEARBEITEN
+// ================================================================
+// EMPFOHLEN: Einstellungen in der HTML-Datei bearbeiten und dort
+// als JSON-Profil sichern. Anschliessend das komplette Skript
+// unter derselben ViEventLog-Skript-ID ersetzen. Dann bleiben die
+// gespeicherten Tageszustaende erhalten.
+// Wer direkt editiert: nur die Werte nach dem = anpassen.
+// true = EIN, false = AUS; bei Uhrzeiten Format "HH:00" beibehalten.
+// WICHTIG: Eine direkte Skriptaenderung aktualisiert das JSON-Profil
+// NICHT. Deshalb eine einzige Quelle fuer Einstellungen verwenden.
+
+// 1. BETRIEB UND FREIGABE
+// Standard ist ein reiner Beobachtungsmodus – auch bei normalem Lauf.
+// Erst nach einem Testlauf und der Kontrolle der Anlage:
+// WW_TESTMODUS auf false UND WW_LIVE_FREIGABE auf true setzen.
+// WW_AUTOMATIK = false stoppt neue automatische Auftraege.
+let WW_TESTMODUS = true;
+let WW_LIVE_FREIGABE = false;
+let WW_AUTOMATIK = true;
+
+// 2. MORGENRESERVE UND TAGESLADUNG
+// Temperaturen in Grad Celsius. Die Morgenreserve findet nur bei
+// Unterschreitung der eingestellten Morgenschwelle statt.
+let WW_MORGEN_AKTIV = true;
+let WW_TAGES_AKTIV = true;
+let WW_MORGEN_UHR = "06:00";
+let WW_MORGEN_FENSTER_MIN = 15;
+let WW_MORGEN_UNTER_C = 39;
+let WW_MORGEN_ZIEL_C = 45;
+let WW_TAGES_ZIEL_C = 51;
+
+// 3. PV-ZEITFENSTER UND WETTER
+// PV_MIN_WM2 = mindestens benoetigte Sonnen-Einstrahlung pro Stunde.
+// WW_RUECKFALL = "latest": spaetestens am PV-Ende laden.
+// WW_RUECKFALL = "hold": ohne geeignete Prognose aussetzen.
+let PV_BEGINN = "10:00";
+let PV_ENDE = "16:00";
+let PV_MIN_WM2 = 70;
+// Startversatz in Minuten zur besten Sonnenstunde: -20 = 20 Minuten frueher.
+// Erlaubt -60 bis +60 in 10-Minuten-Schritten. Nur bei Sonnenplanung;
+// der Rueckfall "latest" bleibt am Ende des PV-Fensters.
+// Bei Aenderung wird ein noch ausstehender Sonnenplan neu zugeordnet;
+// ein bereits vergangener Termin wird NICHT nachgeholt.
+let PV_STARTVERSATZ_MIN = -20;
+let WW_RUECKFALL = "latest";
+
+// 4. OPTIONAL: FRUEHSTART DURCH GEMESSENEN PV-UEBERSCHUSS
+// Ohne vorhandene Messwertquelle PV_MESSUNG_AKTIV = false lassen.
+// NETZ: positives Vorzeichen = Netzbezug, negativ = Einspeisung.
+// Bei Home Assistant Token nur lokal eintragen und nicht teilen.
+let PV_MESSUNG_AKTIV = false;
+let PV_MESS_URL = "";
+let PV_NETZ_PFAD = "";
+// Optionales ISO-8601-Messdatum, z. B. Home Assistant: last_updated.
+// Ohne bestaetigten Zeitstempel KEIN automatischer PV-Fruehstart.
+let PV_MESS_ZEITPFAD = "";
+let PV_MESS_HEADERS = {};
+let PV_INVERTIEREN = false;
+let PV_MIN_UEBERSCHUSS_W = 1800;
+let PV_BESTAETIGUNG_MIN = 10;
+
+// 5. OPTIONAL: AUTOMATISCHE MINDESTUEBERSCHUSS-SCHWELLE
+// Nur relevant, wenn PV_MESSUNG_AKTIV = true.
+let PV_SCHWELLE_AUTO = false;
+let PV_AUTO_ABSCHLAG_W = 200;
+let PV_AUTO_UNTERGRENZE_W = 200;
+let PV_MODUL_KWP = 5;
+let PV_WR_KW = 5;
+let PV_WIRKFAKTOR = 0.8;
+
+// 6. STANDORT UND SOLARPROGNOSE
+// Diese beiden Angaben am besten im HTML-Konfigurator aendern;
+// aus Breitengrad, Laengengrad, Neigung und Ausrichtung erzeugt
+// dieser die vollstaendige Wetteradresse automatisch.
+// Die Werte sind W/m2, KEINE gemessene elektrische PV-Leistung.
+let PV_WETTER_URL = "https://api.open-meteo.com/v1/forecast?latitude=52.5200&longitude=13.4050&hourly=global_tilted_irradiance&timezone=Europe%2FBerlin&forecast_days=2&tilt=30&azimuth=0";
+let PV_WETTER_FELD = "hourly.global_tilted_irradiance";
+
+// ================================================================
+// ENDE DER EINSTELLUNGEN – NACHFOLGENDE STEUERLOGIK NICHT AENDERN
+// ================================================================
+
+// ===== BASIS UND ZUSTAND =====
+let WW_JETZT = now();
+let WW_SEK = WW_JETZT.Unix();
+let WW_LOCAL = date(WW_SEK, "", "Europe/Berlin");
+let WW_TAG = WW_LOCAL.Format("2006-01-02");
+let WW_LAYOUT = "2006-01-02T15:04";
+let WW_IST = dhwTemp();
+let WW_SOLL = dhwTarget();
+let WW_IST_OK = (type(WW_IST) == "float" || type(WW_IST) == "int") && WW_IST >= 5 && WW_IST <= 80;
+let WW_SOLL_OK = (type(WW_SOLL) == "float" || type(WW_SOLL) == "int") && WW_SOLL >= 35 && WW_SOLL <= 65;
+let WW_PV_ANFANG = date(WW_TAG + "T" + PV_BEGINN, WW_LAYOUT, "Europe/Berlin");
+let WW_PV_ENDE = date(WW_TAG + "T" + PV_ENDE, WW_LAYOUT, "Europe/Berlin");
+let WW_MORGEN_START = date(WW_TAG + "T" + WW_MORGEN_UHR, WW_LAYOUT, "Europe/Berlin");
+let WW_PV_START_SEK = WW_PV_ANFANG == nil ? -1 : WW_PV_ANFANG.Unix();
+let WW_PV_ENDE_SEK = WW_PV_ENDE == nil ? -1 : WW_PV_ENDE.Unix();
+let WW_MORGEN_SEK = WW_MORGEN_START == nil ? -1 : WW_MORGEN_START.Unix();
+let WW_CONFIG_OK = WW_PV_START_SEK > WW_MORGEN_SEK &&
+  WW_PV_ENDE_SEK > WW_PV_START_SEK && WW_PV_ENDE_SEK - WW_PV_START_SEK <= 43200 &&
+  WW_MORGEN_UNTER_C >= 30 && WW_MORGEN_UNTER_C < WW_MORGEN_ZIEL_C &&
+  WW_MORGEN_ZIEL_C < WW_TAGES_ZIEL_C && WW_TAGES_ZIEL_C <= 60 &&
+  WW_MORGEN_FENSTER_MIN >= 5 && WW_MORGEN_FENSTER_MIN <= 55 &&
+  PV_MIN_WM2 >= 0 && PV_MIN_WM2 <= 1000 &&
+  PV_STARTVERSATZ_MIN >= -60 && PV_STARTVERSATZ_MIN <= 60 &&
+  PV_STARTVERSATZ_MIN % 10 == 0 &&
+  WW_RUECKFALL in ["latest", "hold"] &&
+  (!PV_MESSUNG_AKTIV || (PV_MESS_URL != "" && PV_BESTAETIGUNG_MIN >= 5 &&
+      PV_BESTAETIGUNG_MIN <= 60 && PV_MIN_UEBERSCHUSS_W >= 200));
+let WW_LIVE = WW_AUTOMATIK && !WW_TESTMODUS && WW_LIVE_FREIGABE && WW_CONFIG_OK;
+
+// Statusfelder sind NUR fuer diese Skript-ID dauerhaft gespeichert.
+// "setting", "requested", "running", "restoring" und "unknown" blockieren
+// einen neuen Auftrag, bis die Ruecklesung eindeutig erfolgt ist.
+let ST_TAG_ALT = get("ww0613_tag", "");
+let ST_MORGEN_ALT = get("ww0613_morgen", "none");
+let ST_TAGES_ALT = get("ww0613_tages", "none");
+let ST_TASK = get("ww0613_task", "none");
+let ST_PHASE = get("ww0613_phase", "idle");
+let ST_ZIEL = get("ww0613_ziel", -1);
+let ST_ORIGINAL = get("ww0613_original", -1);
+let ST_AUFTRAG_SEK = get("ww0613_auftrag_sek", 0);
+// Temperatur zum Zeitpunkt des letzten Startauftrags; nur als
+// Ergaenzung, wenn ein optionaler Ladestatus nicht bereitsteht.
+let ST_STARTTEMP = get("ww0620_starttemp", -1);
+let ST_PLAN = get("ww0613_plan", -1);
+let ST_PLAN_QUELLE = get("ww0613_plan_quelle", "none");
+// Ab V0.6.21: Die Sonnenstunde und der dafuer verwendete Startversatz
+// werden mitgespeichert. Nur so lassen sich spaetere Aenderungen an
+// PV_STARTVERSATZ_MIN ohne neue Wetter-API-Abfrage sicher umrechnen.
+// 9999 kennzeichnet einen alten Plan ohne dokumentierten Versatz.
+let ST_PLAN_VERSATZ = get("ww0621_plan_versatz", 9999);
+let ST_PLAN_SONNENSTUNDE = get("ww0621_plan_sonnenstunde", -1);
+let ST_WETTERPRUEFUNG = get("ww0613_wetterpruefung", 0);
+// Letzte Stundenprognose fuer die lesbare Diagnose; kein Steuerungswert.
+let ST_PROGNOSE = get("ww0613_prognose", "");
+let ST_PROGNOSE_SEK = get("ww0613_prognose_sek", 0);
+// Reine Anzeige fuer heute und morgen, unabhaengig von Ladeauftraegen.
+let ST_PROGNOSE_MORGEN = get("ww0617_prognose_morgen", "");
+let ST_PROGNOSE_MORGEN_TAG = get("ww0617_prognose_morgen_tag", "");
+// Gespeicherte beste Sonnenstunde fuer eine kurze Abend-Zusammenfassung.
+let ST_BEST_MORGEN_TEXT = get("ww0618_beste_morgen_text", "");
+let ST_BEST_MORGEN_W = get("ww0618_beste_morgen_w", -1);
+let ST_BEST_MORGEN_TAG = get("ww0618_beste_morgen_tag", "");
+let ST_ANZEIGE_ABFRAGE = get("ww0617_anzeige_abfrage", 0);
+let ST_ANZEIGE_TAG = get("ww0617_anzeige_tag", "");
+let ST_AUTO_W = get("ww0613_auto_w", -1);
+let ST_PV_SEIT = get("ww0613_pv_seit", -1);
+let ST_PV_ZULETZT = get("ww0613_pv_zuletzt", -1);
+
+let ST_TAG_NEU = ST_TAG_ALT != WW_TAG;
+let ST_ALTE_UNSICHER = ST_TAG_ALT != "" && ST_TAG_NEU &&
+  ST_PHASE in ["setting", "requested", "running", "restoring", "restore_sent", "unknown"];
+let ST_ZUSTAND_OK = ST_PHASE in ["idle", "setting", "requested", "running", "restoring", "restore_sent", "unknown"] &&
+  ST_TASK in ["none", "morning", "main"] &&
+  ST_MORGEN_ALT in ["none", "done", "blocked"] &&
+  ST_TAGES_ALT in ["none", "done", "blocked"];
+let ST_MORGEN = ST_TAG_NEU ? "none" : ST_MORGEN_ALT;
+let ST_TAGES = ST_TAG_NEU ? "none" : ST_TAGES_ALT;
+let ST_PLAN_HEUTE = !ST_TAG_NEU &&
+  (type(ST_PLAN) == "int" || type(ST_PLAN) == "float") && ST_PLAN > 0 &&
+  ST_PLAN_QUELLE in ["openmeteo", "fallback", "surplus"];
+
+// Zu Tagesbeginn werden nur abgeschlossene, eindeutig freie Auftraege
+// zurueckgesetzt. Alte ungeklaerte Aktionen bleiben sichtbar und blockieren.
+if ST_TAG_NEU && !ST_ALTE_UNSICHER && ST_ZUSTAND_OK && WW_AUTOMATIK {
+  set("ww0613_tag", WW_TAG);
+  set("ww0613_morgen", "none");
+  set("ww0613_tages", "none");
+  set("ww0613_task", "none");
+  set("ww0613_phase", "idle");
+  set("ww0613_plan", -1);
+  set("ww0613_plan_quelle", "none");
+  set("ww0621_plan_versatz", 9999);
+  set("ww0621_plan_sonnenstunde", -1);
+  set("ww0613_wetterpruefung", 0);
+  set("ww0613_prognose", "");
+  set("ww0613_prognose_sek", 0);
+  set("ww0613_auto_w", -1);
+  set("ww0613_pv_seit", -1);
+  set("ww0613_pv_zuletzt", -1)
+} else { false };
+
+// ===== PV-PROGNOSE UND FALLBACK =====
+// Aenderung der Startverschiebung: Einen noch nicht begonnenen Sonnenplan
+// aus seiner GESPEICHERTEN Sonnenstunde neu berechnen, ohne HTTP-Aufruf.
+// Alte Plaene (vor V0.6.21) ohne Sonnenstunde koennen nur nach einer
+// begrenzten Wetter-Neuabfrage korrigiert werden. Kein Start im Rueckblick.
+// Ein Plan mit nicht zugeordnetem Versatz darf NICHT live ausloesen.
+let PV_PLAN_VERSATZ_ALT = ST_PLAN_HEUTE && ST_PLAN_QUELLE == "openmeteo" &&
+  ST_PLAN_VERSATZ != PV_STARTVERSATZ_MIN;
+let PV_PLAN_STUNDE_OK = ST_PLAN_SONNENSTUNDE >= WW_PV_START_SEK - 3600 &&
+  ST_PLAN_SONNENSTUNDE <= WW_PV_ENDE_SEK;
+let PV_PLAN_NEUER_START = PV_PLAN_STUNDE_OK ?
+  max(WW_PV_START_SEK, ST_PLAN_SONNENSTUNDE + PV_STARTVERSATZ_MIN * 60) : -1;
+let PV_PLAN_DIREKT_ANPASSEN = WW_AUTOMATIK && WW_CONFIG_OK &&
+  PV_PLAN_VERSATZ_ALT && !ST_ALTE_UNSICHER && ST_ZUSTAND_OK &&
+  ST_PHASE == "idle" && ST_TAGES == "none" &&
+  ST_PLAN > WW_SEK + 300 && PV_PLAN_STUNDE_OK &&
+  PV_PLAN_NEUER_START > WW_SEK + 120 &&
+  PV_PLAN_NEUER_START <= WW_PV_ENDE_SEK;
+if PV_PLAN_DIREKT_ANPASSEN {
+  set("ww0613_plan", PV_PLAN_NEUER_START);
+  set("ww0621_plan_versatz", PV_STARTVERSATZ_MIN);
+  log("STARTVERSATZ GEANDERT: bisher", date(ST_PLAN, "", "Europe/Berlin").Format("15:04"),
+      "neu", date(PV_PLAN_NEUER_START, "", "Europe/Berlin").Format("15:04"),
+      "Versatz", PV_STARTVERSATZ_MIN, "Min; ohne Wetter-API-Abruf")
+} else { false };
+
+// Andere Wetter-Neuplanungen: hoechstens alle 120 Minuten, nahe am
+// geplanten Start fruehestens nach 60 Minuten. Ein uebernommener Plan
+// ohne passende Versatzangabe darf nach 60 Minuten neu geprueft werden.
+// In den letzten 5 Minuten vor dem alten Termin wird nicht umgeplant.
+let PV_ABSTAND_SEK = WW_SEK - ST_WETTERPRUEFUNG;
+let PV_PLAN_WEIT_GENUG = ST_PLAN_HEUTE && ST_PLAN > WW_SEK + 1800;
+let PV_PLAN_AKTUALISIEREN = ST_PLAN_HEUTE &&
+  ST_PLAN > WW_SEK + 300 && !PV_PLAN_DIREKT_ANPASSEN &&
+  (PV_PLAN_VERSATZ_ALT ? PV_ABSTAND_SEK >= 3600 :
+    (PV_PLAN_WEIT_GENUG &&
+      (PV_ABSTAND_SEK >= 7200 ||
+        (ST_PLAN - WW_SEK <= 5400 && PV_ABSTAND_SEK >= 3600))));
+let PV_KANN_PLANEN = WW_AUTOMATIK && WW_TAGES_AKTIV && WW_CONFIG_OK &&
+  !ST_ALTE_UNSICHER && ST_ZUSTAND_OK && ST_PHASE == "idle" &&
+  ST_TAGES == "none" && WW_SEK <= WW_PV_ENDE_SEK &&
+  ((!ST_PLAN_HEUTE && (ST_TAG_NEU || PV_ABSTAND_SEK >= 3600)) ||
+    PV_PLAN_AKTUALISIEREN);
+let PV_RUECKFALL_PRUEFEN = PV_KANN_PLANEN && ST_PLAN_HEUTE;
+let PV_ABFRAGEN = PV_KANN_PLANEN;
+// Nach dem PV-Fenster darf eine reine Wetter-ANZEIGE folgen.
+// Sie veraendert weder Tagesplan noch Startfreigabe; maximal alle 4 Stunden
+// nach dem ersten Aufruf dieses Abends (regulaerer Lauf, persistierter Zustand).
+let PV_NUR_ANZEIGE = WW_CONFIG_OK && !PV_ABFRAGEN &&
+  WW_SEK >= WW_PV_ENDE_SEK &&
+  (ST_ANZEIGE_TAG != WW_TAG || ST_ANZEIGE_ABFRAGE <= 0 ||
+    WW_SEK - ST_ANZEIGE_ABFRAGE >= 14400);
+let PV_HTTP_ABFRAGEN = PV_ABFRAGEN || PV_NUR_ANZEIGE;
+if PV_NUR_ANZEIGE {
+  set("ww0617_anzeige_abfrage", WW_SEK);
+  set("ww0617_anzeige_tag", WW_TAG)
+} else { false };
+// Jeder Abfrageversuch zaehlt, auch wenn Open-Meteo nicht antwortet.
+if PV_ABFRAGEN { set("ww0613_wetterpruefung", WW_SEK) } else { false };
+let PV_ANTWORT = PV_HTTP_ABFRAGEN ? httpGet(PV_WETTER_URL) : nil;
+let PV_ZEITEN = jsonPath(PV_ANTWORT, "hourly.time");
+let PV_WERTE = jsonPath(PV_ANTWORT, PV_WETTER_FELD);
+let PV_DATEN_OK = type(PV_ZEITEN) == "array" && type(PV_WERTE) == "array" &&
+  len(PV_ZEITEN) > 0 && len(PV_ZEITEN) == len(PV_WERTE) && len(PV_ZEITEN) <= 192 &&
+  jsonPath(PV_ANTWORT, "timezone") == "Europe/Berlin";
+// LESBARE SONNENPROGNOSE: Open-Meteo-W/m2 sind der Mittelwert der
+// VORHERGEHENDEN Stunde. Beispiel: 12:00 bedeutet 11:00–12:00 Uhr.
+// Keine echten elektrischen PV-Watt und keine Messung des Wechselrichters.
+// Zwei sauber getrennte Tagesuebersichten im selben Open-Meteo-Abruf.
+// Mittagszeit + ein Kalendertag funktioniert auch an Sommerzeit-Wechseltagen.
+let WW_MORGEN_MITTAG = date(WW_TAG + "T12:00", WW_LAYOUT, "Europe/Berlin");
+let WW_MORGEN_TAG = date(WW_MORGEN_MITTAG.Unix() + 86400, "", "Europe/Berlin").Format("2006-01-02");
+let PV_MORGEN_ANFANG = date(WW_MORGEN_TAG + "T" + PV_BEGINN, WW_LAYOUT, "Europe/Berlin");
+let PV_MORGEN_ENDE = date(WW_MORGEN_TAG + "T" + PV_ENDE, WW_LAYOUT, "Europe/Berlin");
+let PV_MORGEN_START_SEK = PV_MORGEN_ANFANG.Unix();
+let PV_MORGEN_ENDE_SEK = PV_MORGEN_ENDE.Unix();
+let PV_STUNDEN_ROH = PV_DATEN_OK ? map(0..(len(PV_ZEITEN) - 1), {
+  let i = #;
+  let zeit = type(PV_ZEITEN[i]) == "string" ?
+    date(PV_ZEITEN[i], WW_LAYOUT, "Europe/Berlin") : nil;
+  let sek = zeit == nil ? -1 : zeit.Unix();
+  let wert = PV_WERTE[i];
+  let wertOK = (type(wert) == "int" || type(wert) == "float") &&
+    wert >= 0 && wert <= 1600;
+  let imFenster = sek > WW_PV_START_SEK &&
+    sek - 3600 < WW_PV_ENDE_SEK && sek <= WW_PV_ENDE_SEK + 3600;
+  let morgen = sek > PV_MORGEN_START_SEK &&
+    sek - 3600 < PV_MORGEN_ENDE_SEK && sek <= PV_MORGEN_ENDE_SEK + 3600;
+  {
+    heute: imFenster && wertOK,
+    morgen: morgen && wertOK,
+    wert: wert,
+    text: wertOK && zeit != nil ?
+      date(sek - 3600, "", "Europe/Berlin").Format("15:04") + "-" +
+      zeit.Format("15:04") + " " + string(int(round(wert))) : ""
+  }
+}) : [];
+let PV_STUNDEN_LISTE = filter(PV_STUNDEN_ROH, .heute);
+let PV_STUNDEN_MORGEN_LISTE = filter(PV_STUNDEN_ROH, .morgen);
+let PV_STUNDEN_TEXT = len(PV_STUNDEN_LISTE) > 0 ?
+  join(map(PV_STUNDEN_LISTE, .text), " | ") : "";
+let PV_STUNDEN_MORGEN_TEXT = len(PV_STUNDEN_MORGEN_LISTE) > 0 ?
+  join(map(PV_STUNDEN_MORGEN_LISTE, .text), " | ") : "";
+// Diagnose nach einem Wetterabruf sichern, nicht fuer die Ladeplanung verwenden.
+// Testlauf ohne Aktionen speichert auch diese reine Anzeige nicht dauerhaft.
+if PV_HTTP_ABFRAGEN && PV_DATEN_OK {
+  set("ww0613_prognose", PV_STUNDEN_TEXT);
+  set("ww0613_prognose_sek", WW_SEK);
+  set("ww0617_prognose_morgen", PV_STUNDEN_MORGEN_TEXT);
+  set("ww0617_prognose_morgen_tag", WW_MORGEN_TAG)
+} else { false };
+let PV_ANZEIGE = PV_HTTP_ABFRAGEN && PV_DATEN_OK ? PV_STUNDEN_TEXT :
+  (!ST_TAG_NEU ? ST_PROGNOSE : "");
+let PV_ANZEIGE_SEK = PV_HTTP_ABFRAGEN && PV_DATEN_OK ? WW_SEK :
+  (!ST_TAG_NEU ? ST_PROGNOSE_SEK : 0);
+let PV_MORGEN_ANZEIGE = PV_HTTP_ABFRAGEN && PV_DATEN_OK ? PV_STUNDEN_MORGEN_TEXT :
+  (ST_PROGNOSE_MORGEN_TAG == WW_MORGEN_TAG ? ST_PROGNOSE_MORGEN : "");
+let PV_MORGEN_BEST = len(PV_STUNDEN_MORGEN_LISTE) > 0 ?
+  sortBy(PV_STUNDEN_MORGEN_LISTE, .wert)[-1] : nil;
+// Aktualisierung NUR nach erfolgreicher Open-Meteo-Antwort. Ohne neuen
+// Abruf wird die gespeicherte, zum morgigen Datum passende Stunde angezeigt.
+if PV_HTTP_ABFRAGEN && PV_DATEN_OK {
+  set("ww0618_beste_morgen_text", PV_MORGEN_BEST == nil ? "" : PV_MORGEN_BEST.text);
+  set("ww0618_beste_morgen_w", PV_MORGEN_BEST == nil ? -1 : PV_MORGEN_BEST.wert);
+  set("ww0618_beste_morgen_tag", WW_MORGEN_TAG)
+} else { false };
+let PV_BEST_MORGEN_TEXT = PV_HTTP_ABFRAGEN && PV_DATEN_OK ?
+  (PV_MORGEN_BEST == nil ? "" : PV_MORGEN_BEST.text) :
+  (ST_BEST_MORGEN_TAG == WW_MORGEN_TAG ? ST_BEST_MORGEN_TEXT : "");
+let PV_BEST_MORGEN_W = PV_HTTP_ABFRAGEN && PV_DATEN_OK ?
+  (PV_MORGEN_BEST == nil ? -1 : PV_MORGEN_BEST.wert) :
+  (ST_BEST_MORGEN_TAG == WW_MORGEN_TAG ? ST_BEST_MORGEN_W : -1);
+
+let PV_FRUEHEST = max(WW_PV_START_SEK, int(ceil(float(WW_SEK + 1) / 300.0) * 300.0));
+let PV_KANDIDATEN = PV_DATEN_OK && WW_PV_ENDE_SEK >= PV_FRUEHEST ?
+  filter(map(0..(len(PV_ZEITEN) - 1), {
+    let i = #;
+    let wert = PV_WERTE[i];
+    let istZahl = type(wert) == "int" || type(wert) == "float";
+    let zeit = type(PV_ZEITEN[i]) == "string" ?
+      date(PV_ZEITEN[i], WW_LAYOUT, "Europe/Berlin") : nil;
+    let ende = zeit == nil ? -1 : zeit.Unix();
+    // Nie eine bereits vergangene Sonnenstunde kuenstlich auf "jetzt"
+    // schieben: das waere eine ungewollte verzoegerte Ladung.
+    let start = max(ende - 3600 + PV_STARTVERSATZ_MIN * 60, WW_PV_START_SEK);
+    {startUnix: start, score: wert, hourStartUnix: ende - 3600,
+      gueltig: istZahl && wert >= PV_MIN_WM2 && wert <= 1600 &&
+      zeit != nil && start < ende + 3600 &&
+      start >= PV_FRUEHEST && start <= WW_PV_ENDE_SEK}
+  }), .gueltig) : [];
+let PV_SORT = len(PV_KANDIDATEN) > 0 ? sortBy(PV_KANDIDATEN, .score) : [];
+let PV_BEST_SCORE = len(PV_SORT) > 0 ? PV_SORT[-1].score : nil;
+let PV_BESTE = PV_BEST_SCORE == nil ? [] : filter(PV_KANDIDATEN, .score == PV_BEST_SCORE);
+let PV_BEST = len(PV_BESTE) > 0 ? sortBy(PV_BESTE, .startUnix)[0] : nil;
+let PV_VORSCHLAG = PV_BEST == nil ?
+  (WW_RUECKFALL == "latest" && PV_FRUEHEST <= WW_PV_ENDE_SEK ? WW_PV_ENDE_SEK : -1) :
+  PV_BEST.startUnix;
+let PV_QUELLE = PV_BEST == nil ? "fallback" : "openmeteo";
+let PV_AUTO_BASIS = PV_BEST_SCORE == nil ? -1 :
+  min(PV_WR_KW * 1000, PV_BEST_SCORE * PV_MODUL_KWP * PV_WIRKFAKTOR);
+let PV_AUTO_GRENZE = PV_AUTO_BASIS < 0 ? -1 :
+  max(PV_AUTO_UNTERGRENZE_W, int(PV_AUTO_BASIS - PV_AUTO_ABSCHLAG_W));
+let PV_AKTUELLER_PLAN = ST_PLAN_HEUTE ? ST_PLAN : PV_VORSCHLAG;
+// Eine neue Prognose darf einen noch nicht unmittelbar faelligen Plan
+// vor- ODER zuruecklegen, wenn sich die beste Stunde tatsaechlich aendert.
+// Aus Sicherheitsgruenden keine Planverschiebung in den letzten 30 Minuten.
+let PV_PLAN_VERBESSERN = PV_RUECKFALL_PRUEFEN && PV_BEST != nil &&
+  PV_BEST.startUnix > WW_SEK + 120 && ST_PLAN > WW_SEK + 300 &&
+  (PV_PLAN_VERSATZ_ALT || (ST_PLAN > WW_SEK + 1800 &&
+    (ST_PLAN_QUELLE == "fallback" || abs(PV_BEST.startUnix - ST_PLAN) >= 600)));
+let PV_PLAN_LESBAR = PV_PLAN_DIREKT_ANPASSEN ? PV_PLAN_NEUER_START :
+  (PV_KANN_PLANEN && PV_VORSCHLAG > 0 &&
+    (!ST_PLAN_HEUTE || PV_PLAN_VERBESSERN) ? PV_VORSCHLAG :
+    (ST_PLAN_HEUTE ? ST_PLAN : -1));
+
+if PV_KANN_PLANEN && !ST_PLAN_HEUTE && PV_VORSCHLAG > 0 {
+  set("ww0613_plan", PV_VORSCHLAG);
+  set("ww0613_plan_quelle", PV_QUELLE);
+  set("ww0621_plan_versatz", PV_QUELLE == "openmeteo" ? PV_STARTVERSATZ_MIN : 9999);
+  set("ww0621_plan_sonnenstunde", PV_BEST != nil ? PV_BEST.hourStartUnix : -1);
+  set("ww0613_wetterpruefung", WW_SEK);
+  set("ww0613_auto_w", PV_AUTO_GRENZE);
+  log("PLAN NEU:", date(PV_VORSCHLAG, "", "Europe/Berlin").Format("2006-01-02 15:04"), PV_QUELLE)
+} else { false };
+if PV_RUECKFALL_PRUEFEN {
+  set("ww0613_wetterpruefung", WW_SEK);
+  if PV_PLAN_VERBESSERN {
+    set("ww0613_plan", PV_BEST.startUnix);
+    set("ww0613_plan_quelle", "openmeteo");
+    set("ww0621_plan_versatz", PV_STARTVERSATZ_MIN);
+    set("ww0621_plan_sonnenstunde", PV_BEST.hourStartUnix);
+    set("ww0613_auto_w", PV_AUTO_GRENZE);
+    log("PLAN AKTUALISIERT:", date(PV_BEST.startUnix, "", "Europe/Berlin").Format("15:04"),
+        "Solarprognose", int(round(PV_BEST.score)), "W/m2")
+  } else { log("TAGESPLAN BEHALTEN: kein sinnvoller neuer Termin") }
+} else { false };
+
+// ===== WIEDERHOLTE NETZMESSUNG: KEINE EINZELPROBE ALS FRUEHSTART =====
+// Ein HTTP-Abruf beweist nicht das Alter des Sensors. Externe Messung
+// ist NUR fuer den Fruehstart verwendbar, wenn eine Quellzeit eindeutig
+// bestaetigt wurde. Zwei Pfade derselben URL: ViEventLog HTTP-Cache
+// sorgt fuer maximal EINEN HTTP-Request pro Skriptlauf fuer diese URL.
+let PV_MESS_SOLL_LESEN = PV_MESSUNG_AKTIV && WW_SEK >= WW_PV_START_SEK &&
+  WW_SEK <= WW_PV_ENDE_SEK && ST_PHASE == "idle" && !ST_ALTE_UNSICHER;
+let PV_RAW = PV_MESS_SOLL_LESEN ?
+  httpGet(PV_MESS_URL, PV_NETZ_PFAD, PV_MESS_HEADERS) : nil;
+let PV_MESS_ZEIT_RAW = PV_MESS_SOLL_LESEN && PV_MESS_ZEITPFAD != "" ?
+  httpGet(PV_MESS_URL, PV_MESS_ZEITPFAD, PV_MESS_HEADERS) : nil;
+let PV_MESS_ZEIT = type(PV_MESS_ZEIT_RAW) == "string" ?
+  date(PV_MESS_ZEIT_RAW) : nil;
+let PV_MESS_ALTER = PV_MESS_ZEIT == nil ? -1 : WW_SEK - PV_MESS_ZEIT.Unix();
+let PV_MESS_FRISCH = PV_MESS_ALTER >= -30 && PV_MESS_ALTER <= 120;
+let PV_NETZ_ROH = toNumber(PV_RAW);
+let PV_NETZ_W = PV_NETZ_ROH == nil ? nil :
+  (PV_INVERTIEREN ? -PV_NETZ_ROH : PV_NETZ_ROH);
+let PV_NETZ_OK = PV_NETZ_W != nil && PV_NETZ_W >= -100000 && PV_NETZ_W <= 100000;
+let PV_SCHWELLE = PV_SCHWELLE_AUTO ?
+  (ST_PLAN_HEUTE ? ST_AUTO_W : PV_AUTO_GRENZE) : PV_MIN_UEBERSCHUSS_W;
+let PV_UEBERSCHUSS = PV_NETZ_OK && PV_MESS_FRISCH && PV_SCHWELLE >= 200 &&
+  PV_NETZ_W <= -PV_SCHWELLE;
+let PV_ZUSAMMENHAENGEND = PV_UEBERSCHUSS && !ST_TAG_NEU && ST_PV_SEIT > 0 &&
+  ST_PV_ZULETZT >= ST_PV_SEIT && WW_SEK - ST_PV_ZULETZT >= 240 &&
+  WW_SEK - ST_PV_ZULETZT <= 360;
+let PV_START_SEIT = PV_ZUSAMMENHAENGEND ? ST_PV_SEIT : WW_SEK;
+let PV_MIN_ERREICHT = PV_UEBERSCHUSS && PV_ZUSAMMENHAENGEND &&
+  WW_SEK - PV_START_SEIT >= PV_BESTAETIGUNG_MIN * 60;
+if PV_MESSUNG_AKTIV && !ST_ALTE_UNSICHER && ST_ZUSTAND_OK && ST_PHASE == "idle" &&
+  WW_SEK >= WW_PV_START_SEK && WW_SEK <= WW_PV_ENDE_SEK {
+  set("ww0613_pv_seit", PV_UEBERSCHUSS ? PV_START_SEIT : -1);
+  set("ww0613_pv_zuletzt", PV_UEBERSCHUSS ? WW_SEK : -1)
+} else { false };
+
+// ===== STARTKANDIDATEN =====
+let WW_MORGEN_DA = WW_MORGEN_AKTIV && WW_MORGEN_SEK > 0 &&
+  WW_SEK >= WW_MORGEN_SEK && WW_SEK < WW_MORGEN_SEK + WW_MORGEN_FENSTER_MIN * 60 &&
+  ST_MORGEN == "none" && WW_IST_OK && WW_IST < WW_MORGEN_UNTER_C;
+let WW_TAGES_BEDARF = WW_TAGES_AKTIV && WW_IST_OK && WW_IST < WW_TAGES_ZIEL_C;
+// Beim Wechsel des Versatzes den alten Plan NICHT als Live-Start nutzen.
+// Erst nach einem regulaeren Lauf mit gespeicherter Anpassung gilt
+// der neue Termin. Ein verpasster Termin wird nie nachgeholt.
+let WW_PLAN_FAELLIG = ST_PLAN_HEUTE && !PV_PLAN_VERSATZ_ALT &&
+  WW_SEK >= ST_PLAN && WW_SEK <= ST_PLAN + 1200;
+let WW_FRUEHSTART = ST_PLAN_HEUTE && !PV_PLAN_VERSATZ_ALT &&
+  WW_SEK >= WW_PV_START_SEK &&
+  WW_SEK < ST_PLAN && WW_SEK <= WW_PV_ENDE_SEK && PV_MIN_ERREICHT;
+let WW_TAGES_DA = ST_TAGES == "none" && WW_TAGES_BEDARF &&
+  (WW_PLAN_FAELLIG || WW_FRUEHSTART);
+// Ladestatusmerkmale sind je nach Geraet unterschiedlich verfuegbar.
+// Ein fehlendes Merkmal darf die WW-Steuerung NICHT dauerhaft blockieren.
+// Ein explizites true bei einem der beiden Merkmale verhindert dagegen
+// einen weiteren Start. Nach einem Start erfolgt KEINE blinde Wiederholung.
+// Rueckmeldung kann alternativ durch ansteigende WW-Temperatur erfolgen.
+let WW_BRAUCHT_LADESTATUS = WW_AUTOMATIK && WW_CONFIG_OK;
+let WW_CHARGE_EINMAL = WW_BRAUCHT_LADESTATUS ?
+  featureProp("heating.dhw.oneTimeCharge", "active") : nil;
+let WW_CHARGE_LAEUFT = WW_BRAUCHT_LADESTATUS ?
+  featureProp("heating.dhw.charging", "active") : nil;
+let WW_STATUS_EINMAL_LESBAR = type(WW_CHARGE_EINMAL) == "bool";
+let WW_STATUS_LADEN_LESBAR = type(WW_CHARGE_LAEUFT) == "bool";
+let WW_STATUS_VERFUEGBAR = WW_STATUS_EINMAL_LESBAR || WW_STATUS_LADEN_LESBAR;
+let WW_STATUS_VOLLSTAENDIG = WW_STATUS_EINMAL_LESBAR && WW_STATUS_LADEN_LESBAR;
+let WW_AKTIV_BESTAETIGT = WW_CHARGE_EINMAL == true || WW_CHARGE_LAEUFT == true;
+let WW_MODUS = WW_BRAUCHT_LADESTATUS ? dhwMode() : nil;
+let WW_MODUS_OK = type(WW_MODUS) == "string" &&
+  WW_MODUS != "" && WW_MODUS != "off";
+let WW_FREI = WW_LIVE && ST_ZUSTAND_OK && !ST_ALTE_UNSICHER &&
+  ST_PHASE == "idle" && ST_TASK == "none" && WW_IST_OK && WW_SOLL_OK &&
+  WW_MODUS_OK && !WW_AKTIV_BESTAETIGT;
+let WW_START_MORGEN = WW_FREI && WW_MORGEN_DA;
+let WW_START_MAIN = WW_FREI && !WW_START_MORGEN && WW_TAGES_DA;
+let WW_AUSWAHL = WW_START_MORGEN ? "morning" : (WW_START_MAIN ? "main" : "none");
+let WW_ZIEL = WW_AUSWAHL == "morning" ? WW_MORGEN_ZIEL_C : WW_TAGES_ZIEL_C;
+let WW_TARGET_PASST = WW_SOLL_OK && abs(WW_SOLL - WW_ZIEL) < 0.25;
+
+// Temperatur zuerst einstellen, in einem SPAETEREN Lauf ruecklesen.
+// Erst danach eine einzige Einmalladung starten.
+if WW_START_MORGEN || WW_START_MAIN {
+  set("ww0613_task", WW_AUSWAHL);
+  set("ww0613_ziel", WW_ZIEL);
+  set("ww0613_original", WW_SOLL);
+  set("ww0613_auftrag_sek", WW_SEK);
+  set("ww0620_starttemp", WW_IST);
+  if WW_TARGET_PASST {
+    set("ww0613_phase", "requested");
+    log("EINMALLADUNG ANGEFORDERT:", WW_AUSWAHL, "Ziel", WW_ZIEL);
+    startDhwOneTimeCharge()
+  } else {
+    set("ww0613_phase", "setting");
+    log("WW-SOLLWERT SETZEN:", WW_AUSWAHL, "von", WW_SOLL, "auf", WW_ZIEL);
+    setDhwTemperature(WW_ZIEL)
+  }
+} else { false };
+
+// Jeder spaetere Schritt benoetigt den gespeicherten Auftrag.
+// Ein unklarer API-Ausgang bewirkt KEIN erneutes Senden.
+if WW_LIVE && ST_PHASE == "setting" && ST_TASK in ["morning", "main"] &&
+  ST_ZIEL >= 35 && ST_ZIEL <= 60 && !ST_TAG_NEU {
+  if WW_AKTIV_BESTAETIGT {
+    set("ww0613_phase", "unknown");
+    log("BLOCKIERT: Warmwasser startet bereits anderweitig; kein weiterer Einmalstart")
+  } else if WW_SOLL_OK && WW_MODUS_OK &&
+    !WW_AKTIV_BESTAETIGT && abs(WW_SOLL - ST_ZIEL) < 0.25 {
+    set("ww0613_phase", "requested");
+    set("ww0613_auftrag_sek", WW_SEK);
+    log("SOLLWERT Bestaetigt; Einmalladung einmalig anfordern");
+    startDhwOneTimeCharge()
+  } else if WW_SEK - ST_AUFTRAG_SEK > 2400 {
+    set("ww0613_phase", "unknown");
+    log("BLOCKIERT: Sollwert nicht bestaetigt, KEIN zweiter Befehl")
+  } else { log("WARTEN: Sollwert-Ruecklesung steht aus") }
+} else { false };
+
+if WW_LIVE && ST_PHASE == "requested" && !ST_TAG_NEU {
+  if WW_AKTIV_BESTAETIGT {
+    set("ww0613_phase", "running");
+    log("LADUNG BESTAETIGT: Warmwasser aktiv")
+  } else if WW_IST_OK && ST_STARTTEMP >= 5 && WW_IST >= ST_STARTTEMP + 0.5 &&
+    WW_SEK >= ST_AUFTRAG_SEK + 300 {
+    set("ww0613_phase", "running");
+    log("LADUNG PLAUSIBEL: Speichertemperatur steigt; Ladestatus ggf. nicht vorhanden")
+  } else if WW_IST_OK && WW_IST >= ST_ZIEL - 1 && WW_SEK > ST_AUFTRAG_SEK + 300 {
+    set("ww0613_phase", "restoring");
+    log("SPEICHERZIEL ERREICHT; Sollwert nachher wiederherstellen")
+  } else if WW_SEK - ST_AUFTRAG_SEK > 2700 {
+    set("ww0613_phase", "unknown");
+    log("BLOCKIERT: Einmalladung nicht bestaetigt; keine Wiederholung")
+  } else { log("WARTEN: Startbestaetigung noch offen") }
+} else { false };
+
+if WW_LIVE && ST_PHASE == "running" && !ST_TAG_NEU {
+  if WW_IST_OK && WW_IST >= ST_ZIEL - 1 && !WW_AKTIV_BESTAETIGT {
+    set("ww0613_phase", "restoring");
+    log("LADEENDE: Ziel erreicht, Rueckstellung vorbereiten")
+  } else if WW_AKTIV_BESTAETIGT {
+    log("LADESTATUS: Warmwasser laeuft")
+  } else if !WW_STATUS_VERFUEGBAR && WW_SEK - ST_AUFTRAG_SEK <= 10800 {
+    log("LADESTATUS unbekannt: Temperaturverlauf abwarten, keinen Start wiederholen")
+  } else {
+    set("ww0613_phase", "unknown");
+    log("BLOCKIERT: Ladung nicht eindeutig abgeschlossen; kein neuer Auftrag")
+  }
+} else { false };
+
+// Niemals einen beliebigen Sollwert des Benutzers ueberschreiben.
+// Rueckstellung nur, wenn noch unser Zielwert oder der alte Wert vorliegt.
+if WW_LIVE && ST_PHASE == "restoring" && !ST_TAG_NEU {
+  if WW_SOLL_OK && ST_ORIGINAL >= 35 && ST_ORIGINAL <= 60 &&
+    abs(WW_SOLL - ST_ORIGINAL) < 0.25 {
+    if ST_TASK == "morning" { set("ww0613_morgen", "done") }
+    else { set("ww0613_tages", "done") };
+    set("ww0613_task", "none");
+    set("ww0613_phase", "idle");
+    log("ABGESCHLOSSEN: Vorheriger Warmwasser-Sollwert bereits aktiv")
+  } else if WW_SOLL_OK && abs(WW_SOLL - ST_ZIEL) < 0.25 &&
+    ST_ORIGINAL >= 35 && ST_ORIGINAL <= 60 {
+    set("ww0613_phase", "restore_sent");
+    set("ww0613_auftrag_sek", WW_SEK);
+    log("WIEDERHERSTELLUNG: urspruenglicher Sollwert", ST_ORIGINAL);
+    setDhwTemperature(ST_ORIGINAL)
+  } else {
+    set("ww0613_phase", "unknown");
+    log("BLOCKIERT: Sollwert zwischenzeitlich fremd geaendert")
+  }
+} else { false };
+
+if WW_LIVE && ST_PHASE == "restore_sent" && !ST_TAG_NEU {
+  if WW_SOLL_OK && ST_ORIGINAL >= 35 && ST_ORIGINAL <= 60 &&
+    abs(WW_SOLL - ST_ORIGINAL) < 0.25 {
+    if ST_TASK == "morning" { set("ww0613_morgen", "done") }
+    else { set("ww0613_tages", "done") };
+    set("ww0613_task", "none");
+    set("ww0613_phase", "idle");
+    log("ABGESCHLOSSEN: Original-Sollwert wiederhergestellt")
+  } else if WW_SEK - ST_AUFTRAG_SEK > 2400 {
+    set("ww0613_phase", "unknown");
+    log("BLOCKIERT: Rueckstellung nicht bestaetigt; bitte ViCare pruefen")
+  } else { log("WARTEN: Ruecklesung der Rueckstellung") }
+} else { false };
+
+log("V0.6.21", "Tag", WW_TAG, "Konfiguration", WW_CONFIG_OK,
+    "Testmodus", WW_TESTMODUS, "Live freigegeben", WW_LIVE_FREIGABE);
+log("Temperatur", WW_IST ?? "unbekannt", "Soll", WW_SOLL ?? "unbekannt",
+    "Tagesziel", WW_TAGES_ZIEL_C,
+    "Morgenstatus", ST_MORGEN, "Tagesstatus", ST_TAGES,
+    "Auftrag", ST_TASK, "Phase", ST_PHASE);
+log("Wetterdaten", PV_DATEN_OK, "Plan", PV_PLAN_LESBAR,
+    "Quelle", ST_PLAN_HEUTE ? ST_PLAN_QUELLE : (PV_KANN_PLANEN ? PV_QUELLE : "keine Neuplanung"),
+    "Sonnenkandidaten", len(PV_KANDIDATEN), "Mindest-W/m2", PV_MIN_WM2,
+    "Netz W", PV_NETZ_OK ? PV_NETZ_W : "unbekannt");
+// In den ViEventLog-Laufprotokollen sichtbar; die technische State-Ansicht
+// von ViEventLog zeigt Zeitstempel weiterhin als Unix-Zahlen.
+if PV_NUR_ANZEIGE {
+  log("WETTERAUSBLICK: Abfrage NUR zur Anzeige; kein Ladeauftrag, keine Neuplanung.")
+} else if !PV_ABFRAGEN && !ST_PLAN_HEUTE && WW_SEK >= WW_PV_ENDE_SEK {
+  log("HINWEIS: PV-Zeitfenster beendet; heute keine neue Ladeplanung.")
+} else { false };
+log("WETTERABFRAGE:", PV_HTTP_ABFRAGEN ?
+    (PV_NUR_ANZEIGE ? "nur Wetteranzeige" : "fuer Tagesplanung") : "kein neuer Abruf",
+    "Zeitpunkt", PV_HTTP_ABFRAGEN ? WW_LOCAL.Format("2006-01-02 15:04") :
+      (ST_WETTERPRUEFUNG > 0 && !ST_TAG_NEU ?
+        date(ST_WETTERPRUEFUNG, "", "Europe/Berlin").Format("2006-01-02 15:04") : "nicht gespeichert"));
+if PV_ANZEIGE != "" {
+  log("SONNENPROGNOSE HEUTE:", WW_TAG, "Stundenabschnitte und W/m2:", PV_ANZEIGE);
+  log("PROGNOSE-STAND:", PV_ANZEIGE_SEK > 0 ?
+      date(PV_ANZEIGE_SEK, "", "Europe/Berlin").Format("2006-01-02 15:04") : "nicht gespeichert")
+} else {
+  log("SONNENPROGNOSE HEUTE: Keine verfuegbaren Stundenwerte.")
+};
+if PV_MORGEN_ANZEIGE != "" {
+  log("SONNENPROGNOSE MORGEN:", WW_MORGEN_TAG, "Stundenabschnitte und W/m2:", PV_MORGEN_ANZEIGE)
+} else {
+  log("SONNENPROGNOSE MORGEN: Keine verfuegbaren Stundenwerte.")
+};
+if PV_BEST_MORGEN_TEXT != "" && PV_BEST_MORGEN_W >= 0 {
+  log("MORGEN: Beste Sonnenstunde", PV_BEST_MORGEN_TEXT, "W/m2 -",
+      "Mindestschwelle", PV_MIN_WM2, "W/m2",
+      PV_BEST_MORGEN_W >= PV_MIN_WM2 ? "erreicht -" : "nicht erreicht -",
+      "Tagesplanung erfolgt morgen.")
+} else {
+  log("MORGEN: Noch keine gueltige Sonnenprognose fuer die Zusammenfassung.")
+};
+if PV_ABFRAGEN {
+  if PV_BEST != nil {
+    log("BESTE SONNENSTUNDE:",
+        date(PV_BEST.hourStartUnix, "", "Europe/Berlin").Format("15:04"), "-",
+        date(PV_BEST.hourStartUnix + 3600, "", "Europe/Berlin").Format("15:04"),
+        int(round(PV_BEST.score)), "W/m2, Startversatz", PV_STARTVERSATZ_MIN, "Min,",
+        "geplanter Ladebeginn", date(PV_BEST.startUnix, "", "Europe/Berlin").Format("15:04"))
+  } else {
+    log("KEINE GEEIGNETE SONNENSTUNDE:",
+        PV_DATEN_OK ? "Mindesteinstrahlung/Zeitfenster nicht erreicht" : "Wetterdaten ungueltig/fehlen",
+        "Rueckfall", PV_VORSCHLAG > 0 ?
+          date(PV_VORSCHLAG, "", "Europe/Berlin").Format("15:04") : "ausgesetzt")
+  }
+} else { false };
+log("TAGESPLAN LESBAR:",
+    PV_PLAN_LESBAR > 0 ?
+      date(PV_PLAN_LESBAR, "", "Europe/Berlin").Format("15:04") : "noch kein Plan",
+    "Quelle", ST_PLAN_HEUTE ? ST_PLAN_QUELLE :
+      (PV_KANN_PLANEN ? PV_QUELLE : "unbekannt"),
+    "Startversatz", PV_STARTVERSATZ_MIN, "Min");
+if PV_PLAN_VERSATZ_ALT && !PV_PLAN_DIREKT_ANPASSEN && !PV_PLAN_VERBESSERN {
+  log("ACHTUNG: Gespeicherter Sonnenplan gehoert zu einem anderen oder unbekannten Startversatz.",
+      ST_PLAN > WW_SEK + 300 ?
+        "Abgleich bei naechster erlaubter Wetterabfrage; bis dahin KEINE Startfreigabe." :
+        "Alter Termin liegt zu nah oder ist vorbei; heute KEINE Nachholung.")
+} else { false };
+
+log("PV-Vorziehen nach Messreihe", PV_MIN_ERREICHT,
+    "Morgenbedarf", WW_MORGEN_DA, "Tagesbedarf", WW_TAGES_BEDARF,
+    "WW-Status Einmalladung lesbar", WW_STATUS_EINMAL_LESBAR,
+    "WW-Status Ladung lesbar", WW_STATUS_LADEN_LESBAR,
+    "WW-ladet bereits", WW_AKTIV_BESTAETIGT,
+    "WW-Betriebsart", WW_MODUS ?? "unbekannt", "Betriebsart erlaubt", WW_MODUS_OK);
+if WW_BRAUCHT_LADESTATUS && !WW_STATUS_VOLLSTAENDIG {
+  log("HINWEIS: Ein oder beide Ladestatusmerkmale fehlen. Das ALLEIN sperrt den Start NICHT; keine blinde Auftragswiederholung.")
+} else { false };
+if WW_BRAUCHT_LADESTATUS && !WW_MODUS_OK {
+  log("HINWEIS: WW-Betriebsart AUS oder unbekannt; kein automatischer Start.")
+} else { false };
+if PV_MESSUNG_AKTIV && WW_SEK >= WW_PV_START_SEK && WW_SEK <= WW_PV_ENDE_SEK {
+  log("NETZMESSUNG: Werte", PV_NETZ_OK ? "plausibel" : "fehlen/ungueltig",
+    "Messzeit", PV_MESS_ZEIT == nil ? "unbekannt" : PV_MESS_ZEIT.Format("2006-01-02 15:04"),
+    "Alter Sekunden", PV_MESS_ALTER, "frisch", PV_MESS_FRISCH);
+  if PV_NETZ_OK && !PV_MESS_FRISCH {
+    log("KEIN PV-FRUEHSTART: Keine aktuelle Messzeit bestaetigt; HTTP-Abrufzeit ist kein Sensorzeitpunkt.")
+  } else { false }
+} else { false };
+if ST_TASK != "none" && ST_PHASE in ["setting", "requested", "running", "restoring", "restore_sent", "unknown"] && !WW_LIVE {
+  log("ACHTUNG: OFFENER WW-AUFTRAG. Beobachtungsmodus/Automatik AUS: keine automatische Sollwert-Rueckstellung. ViCare und Skriptzustand manuell pruefen, NICHT blind zuruecksetzen!")
+} else { false };
+if ST_PLAN_HEUTE && !PV_PLAN_VERSATZ_ALT && WW_SEK > ST_PLAN + 1200 && ST_TAGES == "none" && ST_PHASE == "idle" {
+  log("HINWEIS: Geplanter Start liegt mehr als 20 Minuten zurueck; heute KEIN verspaeteter Start.")
+} else { false };
+if ST_ALTE_UNSICHER || !ST_ZUSTAND_OK || ST_PHASE == "unknown" {
+  log("STOP: alter oder unklarer Auftrag; manuelle Pruefung erforderlich")
+} else { false };
+if !WW_LIVE { log("BEOBACHTUNG: Keine Anlagenaktionen. Erst spaeter bewusst freigeben.") }
+else { log("LIVE-MODUS: nur kontrollierte Einmalladungen") };
+false

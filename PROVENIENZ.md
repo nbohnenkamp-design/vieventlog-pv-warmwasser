@@ -1,11 +1,13 @@
 # Herkunft und Abgrenzung
 
-Der Community-Prototyp nutzt nach Prüfung passende Bezeichnungen und sichere
-Lesefunktionen aus der bestehenden, privaten Zappi–ViEventLog-Bridge.
-ViEventLog-Expr-Funktionen wie `date()`, `get()`, `set()`, `dhwTemp()` und
-`startDhwOneTimeCharge()` wurden gegen die öffentliche ViEventLog-Dokumentation
-und Quelltexte abgeglichen. Eine Übertragung von Code bedeutet nicht, dass
-alle Funktionen an jeder Wärmepumpe verfügbar oder getestet sind.
+Der Community-Konfigurator wird unabhängig von der privaten Zappi–ViEventLog-Bridge entwickelt. Er benötigt weder deren Synology-Webapp noch deren Docker-Container oder Python-Controller.
 
-Die private Bridge bleibt unverändert. Die Community-Variante benutzt nur
-Open-Meteo und bietet eine Auswahl der beiden Warmwasser-Steuerungsarten.
+Die Funktionalität wird über dokumentierte ViEventLog-Expr-Funktionen und Open-Meteo ausgeführt. Die ursprüngliche private Wärmepumpen-/PV-Steuerung bleibt von diesem GitHub-Update unberührt.
+
+Öffentliche Dokumentation:
+- https://github.com/mschneider82/vieventlog/blob/main/docs/SCRIPTS.md
+- https://open-meteo.com/en/docs
+
+Das Repo enthält keine persönlichen ViCare-Zugangsdaten. Alle Beispielkoordinaten sind ausdrücklich als Berlin-Beispiel gekennzeichnet. Benutzer sollen ihre individuellen JSON-Profile und Skripte mit Tokens nicht öffentlich weitergeben.
+
+Eine öffentliche Softwarelizenz wurde noch nicht festgelegt.

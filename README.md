@@ -1,111 +1,61 @@
-# ViEventLog PV-Warmwasser – Community-Prototyp V0.6.5
+# PV-Warmwasser für ViEventLog — V0.6.21 (Beta)
 
-**Status: Planung und Sicherheitsdiagnose, noch keine produktive Warmwassersteuerung.**
-Diese Community-Anwendung ist **getrennt** von der privaten produktiven
-Zappi–ViEventLog-Bridge. Keine Dateien aus der produktiven Anwendung werden
-bei Installation oder Test geändert.
+**Status:** Eigenständiger, offline verwendbarer HTML-Konfigurator für ein ViEventLog-Expr-Skript. Der Beobachtungsmodus wurde durch erfolgreiche native ViEventLog-Testläufe mit realen Geräte-Lesewerten bestätigt. **Ein vollständiger Live-Ladezyklus mit anschließender Sollwert-Rückstellung wurde noch nicht nachgewiesen.** Keine Freigabe als unbeaufsichtigt geprüfte Produktionssteuerung.
 
 ## Was enthalten ist
 
-- `konfigurator/index.html`: vollständig offline nutzbarer HTML-Konfigurator.
-  Beispielkoordinaten Berlin sind Platzhalter und müssen vor echtem Einsatz
-  ersetzt werden.
-- `konfigurator/expr_tagesplan_v043_beispiel_one_time.expr`:
-  ViEventLog-Tagesplan mit `get()`/`set()` **ausschließlich für den Skriptzustand**,
-  als Beispiel auf Einmalladung eingestellt. Die vom HTML exportierte Fassung
-  enthält die tatsächlich gewählte Methode und den eingestellten Standort.
-- `src/`: Python-Planer, lesende ViEventLog-/Zappi-Adapter, sichere Vorschauen
-  für die beiden Steuerungsverfahren und Testzustand.
-- `tests/`: Python-, Node.js- und Chromium-Browsertests.
-- `examples/`: synthetische Wetter-/Konfigurations-/Wochenplanbeispiele.
+- **`konfigurator/index.html`**: HTML-Datei lokal im Browser öffnen. Keine Webapp, kein Docker, kein Python und keine Serverinstallation erforderlich.
+- **`beispiele/V0.6.21_Berlin_BEISPIEL_NUR_BEOBACHTEN.expr`**: Vom Konfigurator erzeugtes Beispiel mit *Beispielkoordinaten Berlin* und gesperrtem Livebetrieb.
+- **`simulator/index.html`**: Optionaler, separater Tages-Simulator mit nachgestellten Daten; keine echte Anlagensteuerung.
+- **`TESTERGEBNISSE.md`**: Was tatsächlich geprüft wurde und was offen ist.
 
-## Zwei unabhängig wählbare Verfahren
+**Derzeit implementiertes Startverfahren:** native ViEventLog-**Einmalladung** über `startDhwOneTimeCharge()`, mit vorherigem Setzen und nachträglichem Wiederherstellen des WW-Sollwerts. **Eine echte Verschiebung des ViCare-Warmwasser-Wochenprogramms ist NICHT implementiert.** Die früher vorgesehene Wahl zwischen beiden Verfahren ist für spätere Entwicklung offen. Der reguläre ViCare-Betrieb kann bei gleichzeitigem Heizbedarf möglicherweise günstiger für den Verdichterübergang sein; ein Vorteil ist nicht nachgewiesen.
 
-- **ViCare-Zeitprogramm** (`schedule`): Später zeitweilige Verschiebung des
-  vollständig gesicherten WW-Wochenplans und kontrollierte Rückstellung.
-- **Einmalige Warmwasserbereitung** (`one_time`): Später über ViEventLog
-  `startDhwOneTimeCharge()`, sofern das Gerät dies tatsächlich unterstützt.
+## Inbetriebnahme nur zur Beobachtung
 
-Beide Verfahren nutzen ausschließlich **Open-Meteo** als Wetterprognose. Wahlweise
-können beim Hybridbetrieb echte Netzeinspeisungswerte (z. B. Zappi, evcc,
-Home Assistant) den späteren PV-Frühstart bestätigen. Der Python-Zappi-Adapter
-beherrscht HTTP Digest und liest nur; für die Zappi ist **kein zusätzlicher
-Adapterdienst** erforderlich. Ein bestätigter Heizbetrieb kann optional und nur
-bei aktuellen, plausiblen ViEventLog-Energiedaten angerechnet werden.
+1. `konfigurator/index.html` lokal öffnen, Standort, Ausrichtung, PV-Fenster, Temperaturen und Mindeststrahlung eintragen.
+2. Über **Einstellungen speichern** eine JSON-Datei anlegen. Für spätere Änderungen mit **Einstellungen laden** wieder öffnen. Die JSON-Datei nicht öffentlich teilen: Sie kann Standort und interne Netzwerkadressen enthalten.
+3. Skript erzeugen und in ViEventLog bei der passenden Anlage speichern. Bei Aktualisierungen dieselbe **Skript-ID** behalten, damit gespeicherte Zustände nicht ohne Prüfung verloren gehen.
+4. **Testlauf (ohne Aktionen)** durchführen; danach für reguläre Beobachtung einschalten.
+5. Cron: **`*/5 * * * *`** (alle 5 Minuten). Unter diesen Einstellungen erfolgt **keine** Geräteaktion:
 
-## Neu in V0.6.4: fester Tagesplan im ViEventLog-Skriptzustand
-
-Der neue Expr-Export V0.4.3 berechnet beim **ersten zulässigen Lauf** einen
-Tagesvorschlag und legt ihn unter `community_ww_plan_v043` ab.
-Er speichert Tag, Methode, Startzeit, Konfiguration und getrennte Felder
-`mainStatus` / `morningStatus`. Bei späteren Läufen bleibt die Startzeit fest;
-eine neue Wetterprognose verschiebt sie nicht. Ein Wechsel der Steuerungsart oder
-relevanter Parameter am selben Tag wird als Konflikt angezeigt. Ein älterer
-unklarer Auftrag blockiert eine Neuplanung. Nach Ende des PV-Zeitfensters wird
-kein neuer Tagesplan mehr ermittelt.
-
-**Wichtig:** In ViEventLog wird `set()` **nur bei einem regulären Skriptlauf**
-dauerhaft gespeichert. Im **„Testlauf (ohne Aktionen)“** ist die Speicherung nur
-simuliert; ein unmittelbar wiederholter Testlauf sieht deshalb keinen alten
-Plan. Wer die echte Persistenz prüfen will, kann das *diagnostische* Skript
-anschließend einmal regulär laufen lassen: Es schreibt **nur Skriptzustand**,
-nicht das ViCare-Zeitprogramm, nicht die WW-Solltemperatur und startet keine
-Einmalladung. Im nächsten regulären Lauf sollte im Log `heutiger gespeicherter
-Plan true` stehen. Einmal gesetzte interne Statusfelder werden derzeit noch
-**nicht** durch eine physische Geräteüberwachung fortgeschaltet. `planned`
-bedeutet ausdrücklich **nicht** `requested`, `running` oder `done`.
-
-Bei einem ersten Test nach Ende des PV-Fensters wird keine Startzeit erstellt;
-das ist beabsichtigt. Keine Cron-Automatik zur Gerätesteuerung aktivieren.
-
-## Prüfung offline
-
-Python 3.11+ und `requests` installieren. Von der Projektwurzel aus:
-
-```bash
-python3 -m pip install -r requirements.txt
-PYTHONPATH=src python3 -m unittest discover -s tests -v
-node tests/test_expr_export_v065.js
+```expr
+let WW_TESTMODUS = true;
+let WW_LIVE_FREIGABE = false;
+let WW_AUTOMATIK = true;
 ```
 
-Für den optionalen Chromium-Test werden `playwright` und ein lokaler
-Chromium-Browser benötigt; die Datei `tests/browser_ui_v065.py` verwendet
-standardmäßig `/usr/bin/chromium`.
+Im ViEventLog-Skript unter **Protokoll** die Option **„auch Läufe ohne Änderung“** aktivieren, um alle Cron-Ausführungen und ihre Logmeldungen zu sehen. **`Ergebnis false` ist das normale Ende des Skripts, kein Fehler**, wenn ViEventLog zugleich „✓ erfolgreich“ meldet.
 
-Reine Beispielplanung:
+### Ablauf
 
-```bash
-python3 src/ww_cli.py plan \
-  --config examples/beispiel_konfiguration_einmalladung.json \
-  --forecast-file examples/beispiel_openmeteo_berlin.json \
-  --schedule-file examples/beispiel_wochenplan.json \
-  --now '2026-11-07T10:00:00+01:00' \
-  --pin-preview --data ./nur-test-daten
-```
+- Das Skript holt die prognostizierte Sonneneinstrahlung von **Open-Meteo** und sucht innerhalb des eingestellten PV-Zeitfensters nach einer geeigneten Stunde oberhalb der Mindestschwelle.
+- Der Startzeitversatz ist von **−60 bis +60 Minuten in 10-Minuten-Schritten** einstellbar, Standard **−20 Minuten**. Das PV-Startfenster begrenzt frühere Starts.
+- Rückfall `latest`: wenn keine geeignete Stunde verbleibt, ist der **späteste PV-Zeitpunkt** vorgesehen (z. B. 16:00 Uhr); `hold`: kein Ersatzstart.
+- Zusätzlich ist eine konfigurierbare Morgenreserve vorgesehen.
+- Bei optionaler echter Netzleistungsmessung kann eine ausreichend lange, zeitlich belegte Einspeisung vorziehen. Ohne verlässlichen Sensor-Zeitstempel erfolgt **kein** Frühstart auf Basis dieser Messung.
+- Stündliche Werte im Log sind die **durchschnittliche Einstrahlung der jeweils vorhergehenden Stunde in W/m²**, keine elektrische PV-Leistung. Bei 12:00 in den Open-Meteo-Rohdaten ist die Stunde 11:00–12:00 gemeint.
 
-Der Python-Testplan `--pin-preview` ist eine **separate lokale
-Testzustandsdatei**, kein ViCare-/ViEventLog-Status. Ein späterer Aufruf am
-selben Tag darf den dort festgehaltenen Zeitpunkt nicht verschieben.
-`--live-meter` liest auf ausdrücklichen Befehl ausschließlich aktuelle
-Zappi-Messwerte; der CLI enthält **keine POST-Befehle**.
+## Sicherheit und Grenzen
 
-## Sicherheitsgrenzen
+- **Nicht einfach Live freigeben.** Die echten Viessmann-Steuerbefehle und ihre Rückstellung wurden für V0.6.21 nicht an einer laufenden Wärmepumpe durchgehend erprobt.
+- Bei einer unbekannten Antwort wird der Auftrag gesperrt statt blind wiederholt. Die Verfügbarkeit von `heating.dhw.oneTimeCharge.active` und `heating.dhw.charging.active` hängt vom Gerät ab. **Ein fehlendes Merkmal allein sperrt seit V0.6.20 den Start nicht**, ein explizit laufender Ladestatus dagegen schon. Das verbleibende Risiko ist vor dem Livebetrieb gerätespezifisch zu bewerten.
+- Wird Livebetrieb bei offenem Auftrag ausgeschaltet, kann auch die automatische Rückstellung des zuvor geänderten WW-Sollwerts stehen bleiben. In diesem Fall zuerst die Anlage kontrollieren; Zustände nicht blind löschen.
+- Bei Livebetrieb darf **keine zweite unabhängige Warmwasser-Automatik** parallel regeln. Eine separate Raumheizungsautomatik ist im Beobachtungsmodus unproblematisch.
+- Diese Version verwendet für Datums-/Zeitberechnungen **Europe/Berlin**. Die eingetragenen Koordinaten allein ändern die Zeitzone nicht.
+- Bei aktivem `latest` kann auch an einem bewölkten Tag eine Ladung nahe dem PV-Fensterende geplant werden.
+- Für Home Assistant müssen eventuell erforderliche Tokens **nur lokal im erzeugten Skript** ergänzt werden. Niemals eigene Tokens, Skripte mit Zugangsdaten oder persönliche JSON-Einstellungsprofile ins Forum/GitHub hochladen.
+- Ohne eine explizit festgelegte Lizenzdatei ist die rechtliche Nachnutzung noch nicht geregelt.
 
-- Eine echte Warmwasserladung wurde mit dieser Version nicht ausgelöst oder
-  nachgewiesen. Geräteseitige Schreibfähigkeiten müssen pro Anlage geprüft
-  werden.
-- Die Statusmaschine für spätere **echte** Aufträge, Bestätigung der
-  Wärmebereitung, Wiederherstellung des Wochenplans und Crash-Recovery ist
-  noch nicht mit Anlagenaktionen verbunden. Unbekannte Zustände dürfen nicht
-  zum wiederholten Senden eines Befehls führen.
-- **Keine API-Schlüssel, Zugangsdaten oder `.env`-Dateien ins Repository**.
-  Solche Daten nur lokal als Umgebungsvariablen vorhalten.
-- Die Beispieldaten in `examples/` sind keine realen Anlagendaten.
+### API-Nutzung
 
-## Entwicklung und Veröffentlichung
+ViEventLog ruft Open-Meteo **nicht** bei jedem Fünf-Minuten-Cron auf: Tagesplan-Aktualisierung wird zeitlich begrenzt (üblicherweise 120 Minuten, nahe am geplanten Termin frühestens nach 60 Minuten); die reine Abendanzeige frühestens alle vier Stunden. Optionale externe Netzleistungsabfragen können dagegen im PV-Fenster bei jedem Fünf-Minuten-Lauf erfolgen. Viessmann-Gerätewerte werden über den gemeinsamen ViEventLog-Cache gelesen, soweit aktuelle Werte vorhanden sind. **Eine feste Obergrenze für alle Viessmann-Cloudaufrufe sämtlicher parallel laufender Anwendungen ist damit nicht garantiert.**
 
-Dieses Paket ist für die Versionierung in einem eigenständigen GitHub-Repository
-`vieventlog-pv-warmwasser` vorbereitet. Es wurde durch die Paketerstellung
-**noch nicht auf GitHub hochgeladen**. Vor einer öffentlichen Freigabe sollte
-außerdem eine Lizenz bewusst ausgewählt und eine geräteseitige Testmatrix
-abgearbeitet werden. Bis dahin nicht als produktive Steuerung verteilen.
+## Technische Quellen
+
+- [ViEventLog: Skripte und Funktionen](https://github.com/mschneider82/vieventlog/blob/main/docs/SCRIPTS.md)
+- [Open-Meteo: API-Dokumentation, Einstrahlung und Stundenbezug](https://open-meteo.com/en/docs)
+
+## Projektstand
+
+V0.6.21 ist ein **Community-Testkandidat mit nachgewiesenen Trockenläufen**, kein als Livebetrieb freigegebenes Fertigprodukt. Änderungsverlauf und bekannte Einschränkungen: `CHANGELOG.md` und `TESTERGEBNISSE.md`.
