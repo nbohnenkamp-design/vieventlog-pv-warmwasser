@@ -2,7 +2,9 @@
 
 **V0.6.21 (Beta)** – Ein HTML-Konfigurator, der ein eigenständiges ViEventLog-Skript zur PV-orientierten Warmwasserbereitung erzeugt. Die Planung nutzt Open-Meteo, optional auch Netzleistungsmesswerte. Kein Docker, kein Python, keine Webapp.
 
-**[HTML-Konfigurator herunterladen](https://raw.githubusercontent.com/nbohnenkamp-design/vieventlog-pv-warmwasser/main/konfigurator/index.html)**
+**[HTML-Konfigurator V0.6.21 direkt herunterladen](https://github.com/nbohnenkamp-design/vieventlog-pv-warmwasser/releases/download/v0.6.21/ViEventLog_PV_Warmwasser_Konfigurator_V0.6.21.html)**
+
+[Alle Veröffentlichungen (Releases)](https://github.com/nbohnenkamp-design/vieventlog-pv-warmwasser/releases) – die HTML-Datei steht beim jeweiligen Release unter **Assets**.
 
 ## Verwendung
 
